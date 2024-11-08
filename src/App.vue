@@ -2,50 +2,28 @@
   <div class="box">
     <!-- 内容 -->
     <div class="content">
-      <input
-        type="file"
-        accept=".svg"
-        @change="handleFileUpload"
-        ref="fileInput"
-        style="display: none"
-      />
+      <input type="file" accept=".svg" @change="handleFileUpload" ref="fileInput" style="display: none" />
       <!-- top -->
       <div class="top">
-        <img
-          src="./statc/xiugai.png"
-          alt="一键修改"
-          title="一键修改"
-          @click="basics()"
-          class="basicsXiu"
-        />
-        <button @click="triggerFileUpload">导入</button>
+        <img src="./statc/xiugai.png" alt="一键修改" title="一键修改" @click="basics()" class="basicsXiu" />
+        <button @click="triggerFileUpload()">导入</button>
         <button @click="copeSvg()">导出</button>
+        <button @click="PreviousStep()">撤回上一步</button>
       </div>
       <!-- left -->
-      <div class="left"></div>
+      <div class="left">
+        <!-- <div v-for="(v, i) in 9" :key="i" class="div12" @click="Modify(i)"></div> -->
+      </div>
       <!-- right -->
       <div class="right"></div>
       <!-- bottom -->
       <div class="bottom">
         <div class="flex">
-          <div>组件：</div>
-          <div
-            v-for="(item, index) in colew"
-            :key="index"
-            :style="'background-color:' + item"
-            class="div12"
-            @click="cclier(item)"
-          >
-            {{ colorClass[item].slice(2, -2) }}
+          <!-- <div>组件：</div> -->
+          <div v-for="(item, index) in toolColor" :key="index" :style="'background-color:' + item.color" class="div12" @click="cclier(item)">
+            <!-- {{ item.name.match(/\d+/g)[0] }} -->
+            {{ item.name.split('kv')[1] }}
           </div>
-          <div>线条：</div>
-          <div
-            v-for="item in clomne"
-            :key="item"
-            :style="'background-color:' + item"
-            class="div12"
-            @click="cclier(item)"
-          ></div>
           <div class="ScaleRatioColumn">{{ scale * 100 }}%</div>
         </div>
       </div>
@@ -73,22 +51,17 @@
             shadowColor: 'red',
             lineColor: '#ccc',
             borderColor: '#00000000',
-            cornerActiveColor: 'red',
+            cornerActiveColor: 'red'
           }"
         >
         </SketchRule>
-        <div
-          ref="screensRef"
-          id="screens"
-          @wheel="handleWheel"
-          @scroll="handleScroll"
-        >
+        <div ref="screensRef" id="screens" @wheel="handleWheel" @scroll="handleScroll">
           <div
             ref="containerRef"
             class="screen-container"
             :style="{
               width: svgScaleWidth + 'px',
-              height: svgScaleHeight + 'px',
+              height: svgScaleHeight + 'px'
             }"
             @click="svgClick"
             @mousedown="startSelection"
@@ -97,31 +70,9 @@
             @mouseout="mouseout"
             @contextmenu.prevent="handleRightClick"
           >
-            <div
-              class="selection-box"
-              :style="selecFrame.selectionStyle"
-              v-if="selecFrame.isSelecting"
-            >
-              <div class="topPO">
-                {{
-                  Math.trunc(selecFrame.selectionStyle.left.split("px")[0])
-                }}x{{
-                  Math.trunc(selecFrame.selectionStyle.top.split("px")[0])
-                }}
-              </div>
-              <div class="bottPO">
-                {{
-                  Math.trunc(
-                    +selecFrame.selectionStyle.left.split("px")[0] +
-                      +selecFrame.selectionStyle.width.split("px")[0]
-                  )
-                }}x{{
-                  Math.trunc(
-                    +selecFrame.selectionStyle.top.split("px")[0] +
-                      +selecFrame.selectionStyle.height.split("px")[0]
-                  )
-                }}
-              </div>
+            <div class="selection-box" :style="selecFrame.selectionStyle" v-if="selecFrame.isSelecting">
+              <div class="topPO">{{ Math.trunc(selecFrame.selectionStyle.left.split("px")[0]) }}x{{ Math.trunc(selecFrame.selectionStyle.top.split("px")[0]) }}</div>
+              <div class="bottPO">{{ Math.trunc(+selecFrame.selectionStyle.left.split("px")[0] + +selecFrame.selectionStyle.width.split("px")[0]) }}x{{ Math.trunc(+selecFrame.selectionStyle.top.split("px")[0] + +selecFrame.selectionStyle.height.split("px")[0]) }}</div>
             </div>
             <div v-html="newSvgContent" id="canvas" :style="canvasStyle"></div>
           </div>
@@ -137,25 +88,7 @@ export default {
   data() {
     return {
       originalText: "svgManualEncryption",
-      EncryptContent: [
-        "嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫",
-        "厫畃窾乶頔",
-        "儺嬡爫絯彴嚐",
-        "仿歗缶纑纲柪",
-        "仗皂洦粶纾",
-        "收雪弲沯",
-        "仸亀剰蠥",
-        "昉肋耳勥",
-        "坛绉皶見",
-        "焔晸揀剻",
-        "勛珙皶揪",
-        "寺儞陕匦",
-        "添附皶見",
-        "卉垩畏畸赾茙",
-        "寭阳杮勒恚勎",
-        "偏玛呪匘",
-        "隵揑駱頸",
-      ],
+      EncryptContent: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸", "词奱皶揪粚纱", "隵揑窾",'剅嚈仝','寒桎仝'],
       hoveredIndex: null, // 跟踪悬停组件的索引
       svgContent: null,
       newSvgContent: null,
@@ -183,8 +116,8 @@ export default {
           width: "0px",
           height: "0px",
           backgroundColor: "rgba(255, 0, 0, 0.3)",
-          border: "1px solid red",
-        },
+          border: "1px solid red"
+        }
       },
       // 尺子
       thick: 18,
@@ -196,12 +129,12 @@ export default {
       // 刻度的标线，不需要
       lines: {
         h: [],
-        v: [],
+        v: []
       },
       // 结束
       presetLine: [
         { type: "l", site: 100 },
-        { type: "v", site: 200 },
+        { type: "v", site: 200 }
       ],
       // svg名称
       Svgname: "",
@@ -211,36 +144,47 @@ export default {
       svgContentSrc: null,
       svgDoc: "",
       isCtrlPressed: false,
-      colew: [
-        "rgb(240,65,85)",
-        "rgb(128,0,128)",
-        "rgb(255,255,0)",
-        "rgb(128,128,128)",
-        "rgb(0,0,139)",
-        "rgb(185,72,66)",
+      toolColor: [
+        {
+          color: "rgb(0,0,255)",
+          name: "kv1000kV"
+        },
+        {
+          color: "rgb(128,0,128)",
+          name: 'kv220kV'
+        },
+        {
+          color: "rgb(240,65,85)",
+          name: 'kv110kV'
+        },
+        {
+          color: "rgb(255,255,0)",
+          name: 'kv35kV'
+        },
+        {
+          color: "rgb(185,72,66)",
+          name: 'kv10kV'
+        },
+        {
+          color: "rgb(0,0,139)",
+          name: 'kv6kV'
+        },
+        {
+          color: "rgb(128,128,128)",
+          name: 'kv0kV'
+        }
       ],
-      clomne: [
-        "rgb(0,0,255)",
-        "rgb(128,128,128)",
-        // "rgb(0,0,0)",
-        "rgb(0,255,255)",
-      ],
-      colorClass: {
-        "rgb(240,65,85)": "kv110kV",
-        "rgb(128,0,128)": "kv220kV",
-        "rgb(255,255,0)": "kv35kV",
-        "rgb(128,128,128)": "kv0kV",
-        "rgb(0,0,139)": "kv6kV",
-        "rgb(185,72,66)": "kv10kV",
-      },
       svgWidth: 0,
       svgHeight: 0,
       svgScaleHeight: 0,
       svgScaleWidth: 0,
+      // svg回退
+      svgRecordStack: [],
+      modifyEvent: []
     };
   },
   components: {
-    SketchRule,
+    SketchRule
   },
   computed: {
     shadow() {
@@ -248,28 +192,34 @@ export default {
         x: 0,
         y: 0,
         width: 0,
-        height: 0,
+        height: 0
       };
     },
     canvasStyle() {
       return {
         width: this.svgWidth + "px",
         height: this.svgHeight + "px",
-        transform: `scale(${this.scale})`,
+        transform: `scale(${this.scale})`
       };
-    },
+    }
   },
   methods: {
+    // 动作返回上一步
+    PreviousStep() {
+      console.log(this.svgRecordStack);
+      return
+      this.newSvgContent = this.svgRecordStack.pop();
+    },
     // 导出svg
     copeSvg() {
-    console.log(this.newSvgContent,'this.newSvgContent');
+      console.log(this.newSvgContent, "this.newSvgContent");
       if (!this.newSvgContent) {
         alert("请先导入svg文件");
         return;
       }
       // 创建一个Blob对象
       const blob = new Blob([this.newSvgContent], {
-        type: "image/svg+xml;charset=utf-8",
+        type: "image/svg+xml;charset=utf-8"
       });
 
       // 创建一个数据URL
@@ -292,10 +242,7 @@ export default {
     mouseover(event) {
       return;
       // 检查事件目标是否有 initshowingplane 属性
-      if (
-        event.target.tagName.match(/^(rect|circle|path|use)$/) &&
-        !event.target.hasAttribute("initshowingplane")
-      ) {
+      if (event.target.tagName.match(/^(rect|circle|path|use)$/) && !event.target.hasAttribute("initshowingplane")) {
         // 执行你的操作，比如显示边框
         // console.log('鼠标移入', event.target)
         event.target.classList.add("bordered");
@@ -309,10 +256,7 @@ export default {
     // 鼠标移出
     mouseout(event) {
       return;
-      if (
-        event.target.tagName.match(/^(rect|circle|path|use)$/) &&
-        !event.target.hasAttribute("initshowingplane")
-      ) {
+      if (event.target.tagName.match(/^(rect|circle|path|use)$/) && !event.target.hasAttribute("initshowingplane")) {
         event.target.classList.remove("bordered");
         this.hoveredIndex = null; // 取消悬停
         // event.target.removeAttribute('stroke'); // 或者设置回原来的stroke颜色和宽度
@@ -325,16 +269,10 @@ export default {
     },
     // 按下鼠标左键：
     startSelection(event) {
-      console.log(
-        "12445按下：",
-        event.clientX,
-        this.$refs.containerRef.getBoundingClientRect().left
-      );
+      console.log("12445按下：", event.clientX, this.$refs.containerRef.getBoundingClientRect().left);
 
-      this.startX =
-        event.clientX - this.$refs.containerRef.getBoundingClientRect().left;
-      this.startY =
-        event.clientY - this.$refs.containerRef.getBoundingClientRect().top;
+      this.startX = event.clientX - this.$refs.containerRef.getBoundingClientRect().left;
+      this.startY = event.clientY - this.$refs.containerRef.getBoundingClientRect().top;
       console.log("按下坐标：", this.startX, this.startY);
       this.selecFrame.isSelecting = false;
       // 绘制选中框
@@ -360,17 +298,15 @@ export default {
           width: "0px",
           height: "0px",
           backgroundColor: "rgba(255, 0, 0, 0.3)",
-          border: "1px solid red",
-        },
+          border: "1px solid red"
+        }
       };
     },
     // 鼠标移动，绘制选中框
     updateSelecmove(event) {
       this.selecFrame.isSelecting = true;
-      this.endX =
-        event.clientX - this.$refs.containerRef.getBoundingClientRect().left;
-      this.endY =
-        event.clientY - this.$refs.containerRef.getBoundingClientRect().top;
+      this.endX = event.clientX - this.$refs.containerRef.getBoundingClientRect().left;
+      this.endY = event.clientY - this.$refs.containerRef.getBoundingClientRect().top;
       // 根据startX, startY, endX, endY确定选中的线条，并更新selectedLines
       const left = Math.min(this.startX, this.endX);
       const top = Math.min(this.startY, this.endY);
@@ -455,11 +391,7 @@ export default {
 
           if (cmd === "M") {
             // moveto 命令设置新的当前点
-            if (
-              i === 0 ||
-              (parameters[i * 2 - 2] !== currentX &&
-                parameters[i * 2 - 1] !== currentY)
-            ) {
+            if (i === 0 || (parameters[i * 2 - 2] !== currentX && parameters[i * 2 - 1] !== currentY)) {
               // 只有在坐标变化时才添加线段（忽略连续的相同坐标）
               // lineSegments.push({
               //   startX: currentX,
@@ -467,8 +399,7 @@ export default {
               //   endX: parameters[i * 2],
               //   endY: parameters[i * 2 + 1],
               // });
-              (lineSegments["startX"] = parameters[i * 2]),
-                (lineSegments["startY"] = parameters[i * 2 + 1]);
+              (lineSegments["startX"] = parameters[i * 2]), (lineSegments["startY"] = parameters[i * 2 + 1]);
             }
             currentX = parameters[i * 2] * this.scale;
             currentY = parameters[i * 2 + 1] * this.scale;
@@ -492,10 +423,7 @@ export default {
         const pathData = line.getAttribute("d"); // 获取 d 属性
         const points = parsePath(pathData); // 解析路径并获取点
         // 检查线段的两个端点是否在矩形内
-        if (
-          isPointInRect(points.startX, points.startY) ||
-          isPointInRect(points.endX, points.endY)
-        ) {
+        if (isPointInRect(points.startX, points.startY) || isPointInRect(points.endX, points.endY)) {
           return true; // 如果一个端点在矩形内，则线段与矩形相交
         }
         return false; // 如果没有找到相交情况，则返回 false
@@ -512,9 +440,7 @@ export default {
     },
     // 获取div的大小
     initSize() {
-      const wrapperRect = document
-        .querySelector("#wrapper")
-        .getBoundingClientRect();
+      const wrapperRect = document.querySelector("#wrapper").getBoundingClientRect();
       const borderWidth = 1;
       this.width = wrapperRect.width - this.thick - borderWidth;
       this.height = wrapperRect.height - this.thick - borderWidth;
@@ -541,18 +467,12 @@ export default {
       });
     },
     handleScroll() {
-      const screensRect = document
-        .querySelector("#screens")
-        .getBoundingClientRect();
-      const canvasRect = document
-        .querySelector("#canvas")
-        .getBoundingClientRect();
+      const screensRect = document.querySelector("#screens").getBoundingClientRect();
+      const canvasRect = document.querySelector("#canvas").getBoundingClientRect();
 
       // 标尺开始的刻度
-      const startX =
-        (screensRect.left + this.thick - canvasRect.left) / this.scale;
-      const startY =
-        (screensRect.top + this.thick - canvasRect.top) / this.scale;
+      const startX = (screensRect.left + this.thick - canvasRect.left) / this.scale;
+      const startY = (screensRect.top + this.thick - canvasRect.top) / this.scale;
 
       this.startX = startX >> 0;
       this.startY = startY >> 0;
@@ -565,14 +485,11 @@ export default {
         this.threeModel.forEach((useElement) => {
           // console.log(useElement)
           // 获取 xlink:href 属性的值
-          var xlinkHref = useElement.getAttributeNS(
-            "http://www.w3.org/1999/xlink",
-            "href"
-          );
+          var xlinkHref = useElement.getAttributeNS("http://www.w3.org/1999/xlink", "href");
 
           // 检查 xlink:href 属性是否存在且以 #Transformer3: 开头
           if (xlinkHref && xlinkHref.startsWith(this.sanseColor)) {
-            useElement.setAttribute("class", this.colorClass[v]);
+            useElement.setAttribute("class", v.name);
             // console.log("修改三色组件颜色", useElement);
           }
         });
@@ -582,26 +499,23 @@ export default {
         const alf = circle.querySelectorAll("use");
         alf.forEach((useElement) => {
           // 获取 xlink:href 属性的值
-          var xlinkHref = useElement.getAttributeNS(
-            "http://www.w3.org/1999/xlink",
-            "href"
-          );
+          var xlinkHref = useElement.getAttributeNS("http://www.w3.org/1999/xlink", "href");
 
           // 检查 xlink:href 属性是否存在且以 #Transformer3: 开头
           if (xlinkHref && xlinkHref.startsWith(this.sanseColor)) {
             // console.log("修改顶部组件的颜色", this.sanseColor, xlinkHref);
-            useElement.setAttribute("class", this.colorClass[v]);
+            useElement.setAttribute("class", v.name);
           }
         });
         this.sanseColor = "";
       } else {
         // 修改线条颜色
         this.newSelectedLines.forEach((lineId) => {
-          lineId.setAttribute("stroke", v); // 改变选中线条的颜色
+          lineId.setAttribute("stroke", v.color); // 改变选中线条的颜色
         });
         // 修改组件颜色
         this.newSelectedModel.forEach((lineId) => {
-          lineId.setAttribute("class", this.colorClass[v]); // 改变选中线条的颜色
+          lineId.setAttribute("class", v.name); // 改变选中线条的颜色
         });
         this.selecFrame = this.$options.data().selecFrame;
 
@@ -609,6 +523,7 @@ export default {
         this.newSelectedLines = [];
         this.newSelectedModel = [];
       }
+      this.svgRecordStack.push(this.newSvgContent);
     },
     // 文字的加密解密
     xorEncryptDecrypt(text) {
@@ -635,18 +550,35 @@ export default {
       }
       return result;
     },
+    // 修改事件，单个修改
+    Modify() {},
     // 基础修改
     basics() {
       // 1. 删除选中文字
       const elements1 = this.svgDoc.querySelectorAll("#Text_Layer>text");
+      // 存储所有匹配到文本的y轴，用于删除没有匹配到的文本，根据当前y轴来判断
+      const textY = [];
       this.EncryptContent.forEach((cc) => {
         elements1.forEach((textElement) => {
-          if (cc === textElement.textContent.trim()) {
+          // 只要文本中包含该文字
+          if (textElement.textContent.trim().includes(cc)) {
+            // 如果已经被删除，就跳过
+            if (!textElement.parentNode) return;
+            console.log(textElement.textContent.trim());
+            textY.push(textElement.getAttribute("y"));
             // 删除当前标签
             textElement.parentNode.removeChild(textElement);
-            return;
           }
         });
+      });
+      const contrastResult = this.contrast(textY);
+      // 第二次匹配，将删除的坐标轴附近的参数，也删除
+      elements1.forEach((cy) => {
+        // 如果已经被删除，就跳过
+        if (!cy.parentNode) return;
+        if (this.contrastArr(cy.getAttribute("y"), contrastResult, 7)) {
+          cy.parentNode.removeChild(cy);
+        }
       });
       // 2.删除所有图片
       const elements2 = this.svgDoc.querySelectorAll("#Other_Layer>image");
@@ -662,9 +594,7 @@ export default {
       });
       // 4.修改遮挡背景
       const elements4copy = this.svgDoc.querySelectorAll("#Link_Layer>g>path");
-      const elements4s = this.svgDoc.querySelectorAll(
-        "#ACLineSegment_Layer>g>path"
-      );
+      const elements4s = this.svgDoc.querySelectorAll("#ACLineSegment_Layer>g>path");
       const elements4 = [...elements4s, ...elements4copy];
       elements4.forEach((v) => {
         // 获取d属性的内容
@@ -678,11 +608,28 @@ export default {
       });
       // 5. 删除组件内的颜色
       const elements5 = this.svgDoc.querySelectorAll("defs>symbol>*");
+      const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
+      console.log(Protect_LayerUse)
+      let circleName=[]
+      Protect_LayerUse.forEach(v => {
+        circleName.push(v.getAttribute("xlink:href"))
+      })
+      circleName = [...new Set(circleName)]
+      const circleNa = circleName.map(v => {
+        v = v.split('#')[1]
+        return v
+      })
+      console.log(circleNa)
       // console.log("删除组件内颜色", elements5);
-      elements5.forEach((element) => {
-        // 获取stroke属性的内容
-        element.setAttribute("stroke", "");
-      });
+      circleNa.forEach((ecve) => {
+        elements5.forEach((element) => {
+          // 获取stroke属性的内容
+          if (ecve !== element.parentNode.getAttribute("id")) {
+            element.setAttribute("stroke", "");
+          }
+          // 点点点的默认组件颜色还不能删
+        });
+      })
 
       // 6.删除可以跳转的标签
       const hrefSkip = this.svgDoc.querySelectorAll("a");
@@ -713,9 +660,7 @@ export default {
         // 获得文字的左右边距，
         const BackPadd = BackW - 500;
         // 删除数字
-        const MeasurementValue_Layer = this.svgDoc.querySelectorAll(
-          "#MeasurementValue_Layer text"
-        );
+        const MeasurementValue_Layer = this.svgDoc.querySelectorAll("#MeasurementValue_Layer text");
         // console.log("删除数字14545", MeasurementValue_Layer);
         MeasurementValue_Layer.forEach((textElement) => {
           if (textElement.getAttribute("x") > BackPadd) {
@@ -726,10 +671,7 @@ export default {
         });
         // 删除文字
         elements1.forEach((textElement) => {
-          if (
-            textElement.getAttribute("x") > BackPadd &&
-            !this.EncryptContent.includes(textElement.textContent.trim())
-          ) {
+          if (textElement.getAttribute("x") > BackPadd && !this.EncryptContent.includes(textElement.textContent.trim())) {
             // console.log("文字", textElement, textElement.parentNode);
             // 删除当前标签
             textElement.parentNode.removeChild(textElement);
@@ -743,9 +685,7 @@ export default {
       // 假设svg是SVG根元素的引用，或者您可以直接引用到ID为Other_Layer的<g>元素
       const group = this.svgDoc.getElementById("Other_Layer"); // 使用ID直接获取<g>元素
       // 查找该<g>元素下具有特定afmask属性且没有changepicplane属性的<a>元素
-      const aElement = group.querySelector(
-        'a[AFMask="39039"]:not([ChangePicPlane])'
-      );
+      const aElement = group.querySelector('a[AFMask="39039"]:not([ChangePicPlane])');
       // 如果找到了这样的<a>元素，则查找其下的第一个<rect>元素
       if (aElement) {
         const firstRect = aElement.querySelector("rect");
@@ -774,6 +714,55 @@ export default {
       }
 
       this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+      this.svgRecordStack.push(this.newSvgContent);
+    },
+    // 数组的差异对比
+    contrast(data) {
+      // 将数据转换为数值并排序
+      const sortedData = data.map(Number).sort((a, b) => a - b);
+
+      // 计算中位数（用于确定“差异过大”的阈值）
+      const median = sortedData.length % 2 === 0 ? (sortedData[sortedData.length / 2 - 1] + sortedData[sortedData.length / 2]) / 2 : sortedData[Math.floor(sortedData.length / 2)];
+
+      // 假设“差异过大”的阈值是中位数的一半（这个值可以根据需要调整）
+      const threshold = median / 2;
+
+      // 将数据分成两个数组
+      let lowerArray = [];
+      let upperArray = [];
+      for (let num of sortedData) {
+        if (Math.abs(num - median) <= threshold) {
+          lowerArray.push(num);
+        } else {
+          upperArray.push(num);
+        }
+      }
+
+      // 提取每个数组的中间元素
+      function getMiddleElement(arr) {
+        const midIndex = Math.floor(arr.length / 2);
+        return arr.length % 2 === 0
+          ? (arr[midIndex - 1] + arr[midIndex]) / 2 // 偶数长度时取中间两个的平均值
+          : arr[midIndex]; // 奇数长度时取中间那个
+      }
+      const arrData = [];
+      arrData[0] = getMiddleElement(lowerArray);
+      arrData[1] = getMiddleElement(upperArray);
+      return arrData;
+    },
+    // 数据名称对比
+    contrastArr(y, arr, offset) {
+      // 将数组中的字符串转换为数字
+      const numbers = arr.map(Number);
+      // 将y也转换为数字
+      const target = Number(y);
+      // 检查数组中的每个数字是否在范围内
+      for (let num of numbers) {
+        if (Math.abs(num - target) <= offset) {
+          return true; // 如果在范围内，则返回true
+        }
+      }
+      return false; // 如果没有找到匹配项，则返回false
     },
     // 文件input调用
     triggerFileUpload() {
@@ -783,9 +772,7 @@ export default {
     repName(filename) {
       console.log("传入的名称", filename);
       // 移除前缀 "CD." 和后缀 ".fac"
-      const nameWithoutPrefixSuffix = filename
-        .replace(/^CD\./, "")
-        .replace(/\.fac/, "");
+      const nameWithoutPrefixSuffix = filename.replace(/^CD\./, "").replace(/\.fac/, "");
       // 替换下划线为点，并添加新前缀 "简易修改版" 和新后缀 ".svg"
       const newName = `${nameWithoutPrefixSuffix.replace(/_/g, ".")}`;
       return newName;
@@ -804,10 +791,8 @@ export default {
           this.$nextTick(() => {
             const parser = new DOMParser();
             // 解析SVG字符串为DOM对象
-            this.svgDoc = parser.parseFromString(
-              this.newSvgContent,
-              "image/svg+xml"
-            );
+            this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
+            this.svgRecordStack.push(this.newSvgContent);
             const svg = this.svgDoc.querySelector("svg");
             if (svg) {
               this.svgWidth = svg.getAttribute("width");
@@ -816,8 +801,7 @@ export default {
               this.svgScaleHeight = this.svgHeight * this.scale;
             }
             // 滚动居中
-            this.$refs.screensRef.scrollLeft =
-              this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
+            this.$refs.screensRef.scrollLeft = this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
             this.$nextTick(() => {
               this.initSize();
             });
@@ -830,16 +814,16 @@ export default {
     },
     handleResize() {
       this.initSize();
-    },
+    }
   },
   mounted() {
     // 先解密数据内容
     this.EncryptContent.forEach((v, index) => {
       this.EncryptContent[index] = this.xorEncryptDecrypt(v);
     });
+    console.log(this.EncryptContent);
     // 滚动居中
-    this.$refs.screensRef.scrollLeft =
-      this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
+    this.$refs.screensRef.scrollLeft = this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
     window.addEventListener("resize", this.handleResize);
     this.$nextTick(() => {
       this.initSize();
@@ -848,7 +832,7 @@ export default {
   beforeDestroy() {
     // 组件销毁前移除 resize 事件监听器
     window.removeEventListener("resize", this.handleResize);
-  },
+  }
 };
 </script>
 
@@ -892,6 +876,7 @@ body,
       border: none;
       background: transparent;
       color: #fff;
+      cursor: pointer;
     }
     > img {
       width: 22px;
@@ -1003,8 +988,10 @@ body,
   }
 }
 .div12 {
-  width: 22px;
-  height: 22px;
+  min-width: 22px;
+  padding: 0 3px;
+  height: 24px;
+  line-height: 24px;
   cursor: pointer;
   color: #fff;
   font-size: 12px;
