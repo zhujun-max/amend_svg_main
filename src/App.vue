@@ -227,6 +227,9 @@ export default {
     }
   },
   methods: {
+    handleUseClick (event) {
+      console.log('ffffffff',event)
+    },
     kaiguan () {
       this.kaiguanShow = !this.kaiguanShow
       const LayerG = $('#canvas #DollyBreaker_Layer>g>use')
@@ -331,7 +334,9 @@ export default {
         console.log('备份')
         // 将svg数据备份
         this.newSvgContentCopy = $('#canvas>svg').clone(true)[0];
-        this.$refs.containerRef.style.pointerEvents="none"
+        this.$refs.containerRef.style.pointerEvents = "none"
+        // 关闭框选弹窗
+        this.handleRightClick()
       } else {
         // svg还原
         console.log($('#canvas>svg')[0])
@@ -403,6 +408,11 @@ export default {
     // 按下鼠标
     svgClick(event) {
       console.log("按下坐标：：：：：：：：：：", event.target);
+      // 如果是点击的组件
+      if (Math.trunc(this.selecFrame.selectionStyle.left.split("px")[0])===Math.trunc(+this.selecFrame.selectionStyle.left.split("px")[0] + +this.selecFrame.selectionStyle.width.split("px")[0]) && Math.trunc(this.selecFrame.selectionStyle.top.split("px")[0])===Math.trunc(+this.selecFrame.selectionStyle.top.split("px")[0] + +this.selecFrame.selectionStyle.height.split("px")[0])) {
+        console.log(event.target.closest('use'))
+        // this.newSelectedModel=[event.target]
+      }
     },
     // 按下鼠标左键：
     startSelection(event) {
@@ -615,51 +625,20 @@ export default {
       this.startY = startY >> 0;
     },
     // 选中颜色 修改组件和线条。修改三色组件
-    cclier(v) {
-      if (this.sanseColor) {
-        // 修改三色组件
-        // 修改svg组件中的颜色
-        this.threeModel.forEach((useElement) => {
-          // console.log(useElement)
-          // 获取 xlink:href 属性的值
-          var xlinkHref = useElement.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-
-          // 检查 xlink:href 属性是否存在且以 #Transformer3: 开头
-          if (xlinkHref && xlinkHref.startsWith(this.sanseColor)) {
-            useElement.setAttribute("class", v.name);
-            // console.log("修改三色组件颜色", useElement);
-          }
-        });
-        this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
-        // 修改顶部三色组件颜色
-        let circle = document.getElementById("sanId");
-        const alf = circle.querySelectorAll("use");
-        alf.forEach((useElement) => {
-          // 获取 xlink:href 属性的值
-          var xlinkHref = useElement.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-
-          // 检查 xlink:href 属性是否存在且以 #Transformer3: 开头
-          if (xlinkHref && xlinkHref.startsWith(this.sanseColor)) {
-            // console.log("修改顶部组件的颜色", this.sanseColor, xlinkHref);
-            useElement.setAttribute("class", v.name);
-          }
-        });
-        this.sanseColor = "";
-      } else {
+    cclier (v) {
         // 修改线条颜色
         this.newSelectedLines.forEach((lineId) => {
-          lineId.setAttribute("stroke", v.color); // 改变选中线条的颜色
+          lineId.setAttribute("stroke", v.color);
         });
         // 修改组件颜色
         this.newSelectedModel.forEach((lineId) => {
-          lineId.setAttribute("class", v.name); // 改变选中线条的颜色
+          lineId.setAttribute("class", v.name);
         });
         this.selecFrame = this.$options.data().selecFrame;
 
         this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
         this.newSelectedLines = [];
         this.newSelectedModel = [];
-      }
       this.svgRecordStack.push(this.newSvgContent);
     },
     // 文字的加密解密
@@ -988,6 +967,14 @@ export default {
             })
             this.svgId = svgId
 
+
+            // 给所有use组件添加可点击的效果
+            const useElements = $('svg use');
+            console.log(useElements)
+            useElements.each((i, v) => {
+              $(v).css('pointer-events', 'bounding-box');
+            });
+
               
               // 滚动居中
             this.$refs.screensRef.scrollLeft = this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
@@ -1120,6 +1107,7 @@ body,
     width: 100%;
     height: 100%;
     position: relative !important;
+    user-select:none;
     #screens {
       position: absolute;
       width: 100%;
