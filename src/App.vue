@@ -12,7 +12,7 @@
       </div>
       <!-- left -->
       <div class="left">
-        <div class="jianch" @click="jiancha()"></div>
+        <div class="jianch" @click="jiancha()">12</div>
         <div class="yulan" @click="yulan()">{{ Preview?'退出预览':'预览模式'}}</div>
         <div v-if="Preview" class="div32">
           <div @click="hideSwitch()">隐藏所有开关{{ hideSwitchShow }}</div>
@@ -407,10 +407,11 @@ export default {
     },
     // 按下鼠标
     svgClick(event) {
-      console.log("按下坐标：：：：：：：：：：", event.target);
+      // console.log("按下坐标：：：：：：：：：：", event.target);
       // 如果是点击的组件
       if (Math.trunc(this.selecFrame.selectionStyle.left.split("px")[0])===Math.trunc(+this.selecFrame.selectionStyle.left.split("px")[0] + +this.selecFrame.selectionStyle.width.split("px")[0]) && Math.trunc(this.selecFrame.selectionStyle.top.split("px")[0])===Math.trunc(+this.selecFrame.selectionStyle.top.split("px")[0] + +this.selecFrame.selectionStyle.height.split("px")[0])) {
-        console.log(event.target.closest('use'))
+        console.log(event.target)
+        this.newSelectedModel = [event.target]
         // this.newSelectedModel=[event.target]
       }
     },
@@ -669,6 +670,11 @@ export default {
     // 修改事件，单个修改
     Modify () { },
     jiancha () {
+       const useElements = document.querySelectorAll('svg use');
+              useElements.forEach((el) => {
+                el.setAttribute('pointer-events', 'bounding-box');
+              });
+              return
       // 开关
       const elements1 = this.svgDoc.querySelectorAll("#DollyBreaker_Layer>g>use");
       // 接地刀闸
@@ -969,11 +975,13 @@ export default {
 
 
             // 给所有use组件添加可点击的效果
-            const useElements = $('svg use');
-            console.log(useElements)
-            useElements.each((i, v) => {
-              $(v).css('pointer-events', 'bounding-box');
-            });
+            // const useElements = $('svg use');
+            // console.log(useElements)
+            // useElements.each((i, v) => {
+            //   $(v).css('pointer-events', 'bounding-box');
+            //   console.log(v)
+            // });
+           
 
               
               // 滚动居中
