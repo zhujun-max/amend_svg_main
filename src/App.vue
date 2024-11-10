@@ -1,7 +1,7 @@
 <template>
   <div class="box">
     <!-- 内容 -->
-    <div class="content">
+    <div class="content" :class="Preview?'yellow':''" >
       <input type="file" accept=".svg" @change="handleFileUpload" ref="fileInput" style="display: none" />
       <!-- top -->
       <div class="top">
@@ -12,23 +12,32 @@
       </div>
       <!-- left -->
       <div class="left">
+        <div class="jianch" @click="jiancha()"></div>
+        <div class="yulan" @click="yulan()">{{ Preview?'退出预览':'预览模式'}}</div>
+        <div v-if="Preview" class="div32">
+          <div @click="hideSwitch()">隐藏所有开关{{ hideSwitchShow }}</div>
+          <div @click="hideSwitchOther()">隐藏开关之外的{{ hideSwitchOtherShow }}</div>
+          <div @click="kaiguan" v-if="kaiguanShowD">开关{{ kaiguanShow }}</div>
+          <div @click="jididaozha" v-if="jididaozhaShowD">接地刀闸{{ jididaozhaShow }}</div>
+          <div @click="daozha" v-if="daozhaShowD">刀闸{{ daozhaShow }}</div>
+        </div>
         <!-- <div v-for="(v, i) in 9" :key="i" class="div12" @click="Modify(i)"></div> -->
       </div>
       <!-- right -->
       <div class="right"></div>
       <!-- bottom -->
       <div class="bottom">
-        <div class="flex">
+        <div class="flex" v-if="!Preview">
           <!-- <div>组件：</div> -->
           <div v-for="(item, index) in toolColor" :key="index" :style="'background-color:' + item.color" class="div12" @click="cclier(item)">
             <!-- {{ item.name.match(/\d+/g)[0] }} -->
             {{ item.name.split('kv')[1] }}
           </div>
-          <div class="ScaleRatioColumn">{{ scale * 100 }}%</div>
+          <div class="ScaleRatioColumn">{{ Math.round(scale * 100) }}%</div>
         </div>
       </div>
       <!-- 内容 -->
-      <div class="conentBox" id="wrapper">
+      <div class="conentBox" id="wrapper" ref="wrapper">
         <!-- https://github.com/chuxiaoguo/vue-sketch-ruler/blob/master/docs/src/components/UserRuler.vue -->
         <SketchRule
           :thick="thick"
@@ -43,16 +52,7 @@
           :cornerActive="true"
           :isShowRuler="false"
           :isShowReferLine="false"
-          :palette="{
-            bgColor: 'rgba(225,225,255, 0)',
-            longfgColor: '#bbb',
-            shortfgColor: '#bbb',
-            fontColor: '#bbb',
-            shadowColor: 'red',
-            lineColor: '#ccc',
-            borderColor: '#00000000',
-            cornerActiveColor: 'red'
-          }"
+          :palette="palette"
         >
         </SketchRule>
         <div ref="screensRef" id="screens" @wheel="handleWheel" @scroll="handleScroll">
@@ -87,6 +87,18 @@ import SketchRule from "vue-sketch-ruler";
 export default {
   data() {
     return {
+      palette:{
+            bgColor: 'rgba(225,225,255, 0)',
+            longfgColor: '#bbb',
+            shortfgColor: '#bbb',
+            fontColor: '#bbb',
+            shadowColor: 'red',
+            lineColor: '#ccc',
+            borderColor: '#00000000',
+            cornerActiveColor: 'red'
+      },
+      newSvgContentCopy:{},
+      Preview:false,
       originalText: "svgManualEncryption",
       EncryptContent: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸", "词奱皶揪粚纱", "隵揑窾",'剅嚈仝','寒桎仝'],
       hoveredIndex: null, // 跟踪悬停组件的索引
@@ -180,7 +192,18 @@ export default {
       svgScaleWidth: 0,
       // svg回退
       svgRecordStack: [],
-      modifyEvent: []
+      modifyEvent: [],
+      hideSwitchShow: false,
+      hideSwitchOtherShow:false,
+      // 存储所有的svg组件的id
+      svgId: [],
+      // 组件的状态
+      kaiguanShow: false,
+      daozhaShow: false,
+      jididaozhaShow: false,
+      kaiguanShowD:false,
+      daozhaShowD:false,
+      jididaozhaShowD:false,
     };
   },
   components: {
@@ -204,6 +227,120 @@ export default {
     }
   },
   methods: {
+    kaiguan () {
+      this.kaiguanShow = !this.kaiguanShow
+      const LayerG = $('#canvas #DollyBreaker_Layer>g>use')
+      LayerG.each((i,v) => {
+        const oldxhref = v.getAttribute("xlink:href")
+        let newxhref=""
+        if (this.kaiguanShow) {
+          if (oldxhref.indexOf('0_0') != -1) {
+              newxhref = oldxhref.substring(0, oldxhref.length - 1) + '2';
+            } else {
+              newxhref = oldxhref.substring(0, oldxhref.length - 1) + '1';
+            }
+        } else {
+          	if (oldxhref.indexOf('0_2') != -1) {
+              newxhref = oldxhref.substring(0, oldxhref.length - 1) + '0';
+            } else {
+              newxhref = oldxhref.substring(0, oldxhref.length - 1) + '0';
+            }
+        }
+        v.setAttribute("xlink:href", newxhref )
+        // 正常只有这几种状态，其他状态没有做处理
+          if (!['1_0_0', '1_0_2', '1_1_0', '1_1_1'].includes(oldxhref.slice(-5))) {
+            alert('竟然有其他开关状态：' + oldxhref)
+          }
+      })
+      
+    },
+    jididaozha () {
+      this.jididaozhaShow = !this.jididaozhaShow
+      const GroundDisconnectorG = $('#canvas #GroundDisconnector_Layer>g>use')
+      GroundDisconnectorG.each((i,v) => {
+        let oldxhref = v.getAttribute("xlink:href")
+        let newxhref = ""
+        // 正常只有这几种状态，其他状态没有做处理
+        if (!['_0', '_1'].includes(oldxhref.slice(-2))) {
+          alert('竟然有其他接地刀闸状态：' + oldxhref)
+        }
+        if (this.jididaozhaShow) {
+          oldxhref = oldxhref.substring(0, oldxhref.length - 1)
+          newxhref = oldxhref + '1';
+        } else {
+          oldxhref = oldxhref.substring(0, oldxhref.length - 1)
+          newxhref = oldxhref + '0';
+        }
+        v.setAttribute("xlink:href", newxhref )
+      })
+    },
+    daozha () {
+      this.daozhaShow = !this.daozhaShow
+      const DisconnectorG = $('#canvas #Disconnector_Layer>g>use')
+      DisconnectorG.each((i,v) => {
+        let oldxhref = v.getAttribute("xlink:href")
+        let newxhref = ""
+        // 正常只有这几种状态，其他状态没有做处理
+        if (!['_0', '_1'].includes(oldxhref.slice(-2))) {
+          alert('竟然有其他刀闸状态：' + oldxhref)
+        }
+        if (this.daozhaShow) {
+          oldxhref = oldxhref.substring(0, oldxhref.length - 1)
+          newxhref = oldxhref + '1';
+        } else {
+          oldxhref = oldxhref.substring(0, oldxhref.length - 1)
+          newxhref = oldxhref + '0';
+        }
+        v.setAttribute("xlink:href", newxhref )
+      })
+    },
+    // 隐藏所有开关
+    hideSwitch () {
+      this.hideSwitchShow = !this.hideSwitchShow
+      if (this.hideSwitchShow) {
+          $('#DollyBreaker_Layer').hide()
+          $('#GroundDisconnector_Layer').hide()
+          $('#Disconnector_Layer').hide()
+        } else {
+          $('#DollyBreaker_Layer').show()
+          $('#GroundDisconnector_Layer').show()
+          $('#Disconnector_Layer').show()
+        }
+    },
+    // 隐藏开关之外的
+    hideSwitchOther () {
+      this.hideSwitchOtherShow = !this.hideSwitchOtherShow
+     		if (this.hideSwitchOtherShow) {
+			this.svgId.forEach(v => {
+				if (!['Head_Layer', 'DollyBreaker_Layer', 'GroundDisconnector_Layer', 'Disconnector_Layer'].includes(v)) {
+					$(`#${v}`).hide()
+				}
+			})
+		} else {
+			this.svgId.forEach(v => {
+				if (!['Head_Layer', 'DollyBreaker_Layer', 'GroundDisconnector_Layer', 'Disconnector_Layer'].includes(v)) {
+					$(`#${v}`).show()
+				}
+			})
+		}
+
+    },
+    yulan () {
+      this.Preview = !this.Preview
+      if (this.Preview) {
+        console.log('备份')
+        // 将svg数据备份
+        this.newSvgContentCopy = $('#canvas>svg').clone(true)[0];
+        this.$refs.containerRef.style.pointerEvents="none"
+      } else {
+        // svg还原
+        console.log($('#canvas>svg')[0])
+        $('#canvas>svg').html(this.newSvgContentCopy)
+        
+        this.$refs.containerRef.style.pointerEvents="all"
+      }
+
+    },
     // 动作返回上一步
     PreviousStep() {
       console.log(this.svgRecordStack);
@@ -551,7 +688,31 @@ export default {
       return result;
     },
     // 修改事件，单个修改
-    Modify() {},
+    Modify () { },
+    jiancha () {
+      // 开关
+      const elements1 = this.svgDoc.querySelectorAll("#DollyBreaker_Layer>g>use");
+      // 接地刀闸
+      const elements2 = this.svgDoc.querySelectorAll("#GroundDisconnector_Layer>g>use");
+      // 刀闸
+      const elements3 = this.svgDoc.querySelectorAll("#Disconnector_Layer>g>use");
+      let elementss1 =[]
+      let elementss2 =[]
+      let elementss3 =[]
+      elements1.forEach(v => {
+        elementss1.push(v.getAttribute("xlink:href"))
+      })
+      elements2.forEach(v => {
+        elementss2.push(v.getAttribute("xlink:href"))
+      })
+      elements3.forEach(v => {
+        elementss3.push(v.getAttribute("xlink:href"))
+      })
+      console.log('开关',[...new Set(elementss1)])
+      console.log('接地刀闸',[...new Set(elementss2)])
+      console.log('刀闸',[...new Set(elementss3)])
+      
+    },
     // 基础修改
     basics() {
       // 1. 删除选中文字
@@ -564,7 +725,7 @@ export default {
           if (textElement.textContent.trim().includes(cc)) {
             // 如果已经被删除，就跳过
             if (!textElement.parentNode) return;
-            console.log(textElement.textContent.trim());
+            // console.log(textElement.textContent.trim());
             textY.push(textElement.getAttribute("y"));
             // 删除当前标签
             textElement.parentNode.removeChild(textElement);
@@ -609,27 +770,36 @@ export default {
       // 5. 删除组件内的颜色
       const elements5 = this.svgDoc.querySelectorAll("defs>symbol>*");
       const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
-      console.log(Protect_LayerUse)
+      console.log('组件1',Protect_LayerUse)
       let circleName=[]
       Protect_LayerUse.forEach(v => {
         circleName.push(v.getAttribute("xlink:href"))
       })
+      console.log('组件2',Protect_LayerUse)
       circleName = [...new Set(circleName)]
+      console.log('组件3',circleName)
       const circleNa = circleName.map(v => {
         v = v.split('#')[1]
         return v
       })
       console.log(circleNa)
       // console.log("删除组件内颜色", elements5);
-      circleNa.forEach((ecve) => {
+      if (circleNa.length) {
+        circleNa.forEach((ecve) => {
+          elements5.forEach((element) => {
+            console.log(element.parentNode.getAttribute("id"),ecve)
+            // 获取stroke属性的内容
+            if (ecve !== element.parentNode.getAttribute("id")) {
+              element.setAttribute("stroke", "");
+            }
+            // 点点点的默认组件颜色还不能删
+          });
+        })
+      } else {
         elements5.forEach((element) => {
-          // 获取stroke属性的内容
-          if (ecve !== element.parentNode.getAttribute("id")) {
-            element.setAttribute("stroke", "");
-          }
-          // 点点点的默认组件颜色还不能删
-        });
-      })
+              element.setAttribute("stroke", "");
+          });
+      }
 
       // 6.删除可以跳转的标签
       const hrefSkip = this.svgDoc.querySelectorAll("a");
@@ -783,7 +953,7 @@ export default {
       if (file && file.type === "image/svg+xml") {
         const reader = new FileReader();
         this.Svgname = this.repName(file.name);
-        console.log("获取到svg名称", this.Svgname);
+        // console.log("获取到svg名称", this.Svgname);
         reader.onload = (e) => {
           this.svgContent = e.target.result;
           this.newSvgContent = e.target.result;
@@ -800,7 +970,26 @@ export default {
               this.svgScaleWidth = this.svgWidth * this.scale;
               this.svgScaleHeight = this.svgHeight * this.scale;
             }
-            // 滚动居中
+            //获取svg下所有类型组件的总id
+            let svgIdMap = $('svg>g')
+            console.log(svgIdMap)
+            const svgId = []
+            svgIdMap.map((index, value) => {
+              svgId.push(value.id)
+                console.log(value.id)
+                // 顺便判断有没有开关，刀闸，接地刀闸
+              if (value.id === "DollyBreaker_Layer") {
+                this.kaiguanShowD = true
+              } else if (value.id === "GroundDisconnector_Layer") {
+                this.jididaozhaShowD = true
+              } else if (value.id === "Disconnector_Layer") {
+                this.daozhaShowD = true
+              }
+            })
+            this.svgId = svgId
+
+              
+              // 滚动居中
             this.$refs.screensRef.scrollLeft = this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
             this.$nextTick(() => {
               this.initSize();
@@ -821,7 +1010,6 @@ export default {
     this.EncryptContent.forEach((v, index) => {
       this.EncryptContent[index] = this.xorEncryptDecrypt(v);
     });
-    console.log(this.EncryptContent);
     // 滚动居中
     this.$refs.screensRef.scrollLeft = this.$refs.containerRef.getBoundingClientRect().width / 2 - 300; // 300 = #screens.width / 2
     window.addEventListener("resize", this.handleResize);
@@ -889,6 +1077,11 @@ body,
     height: 100%;
     top: 0;
     left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+    box-sizing: border-box;
   }
   .right {
     width: 50px;
@@ -1028,4 +1221,34 @@ body,
 ::-webkit-scrollbar-corner {
   background: #444; /* 角落的颜色 */
 }
+.jianch{
+  width: 24px;
+  height: 24px;
+  background:red;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.yulan{
+    margin-top: 10px;
+    width: 24px;
+    color: #fff;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+.yellow>div{
+  background-color: yellow !important;
+}
+.div32{
+isplay: flex;
+    flex-direction: column;
+}
+.div32>div{
+    width: 24px;
+  // height: 24px;
+  display: flex;
+  margin-top: 12px;
+  border: 1px solid #0c0c0c;
+
+}
+
 </style>
