@@ -4,7 +4,7 @@
     <div class="content" :class="Preview?'yellow':''" >
       <input type="file" accept=".svg" @change="handleFileUpload" ref="fileInput" style="display: none" />
       <!-- top -->
-      <div class="top">
+      <div class="top"  v-if="!Preview">
         <img src="./statc/xiugai.png" alt="一键修改" title="一键修改" @click="basics()" class="basicsXiu" />
         <button @click="triggerFileUpload()">导入</button>
         <button @click="copeSvg()">导出</button>
@@ -12,7 +12,7 @@
       </div>
       <!-- left -->
       <div class="left">
-        <div class="jianch" @click="jiancha()">12</div>
+        <!-- <div class="jianch" @click="jiancha()">12</div> -->
         <div class="yulan" @click="yulan()">{{ Preview?'退出预览':'预览模式'}}</div>
         <div v-if="Preview" class="div32">
           <div @click="hideSwitch()">隐藏所有开关{{ hideSwitchShow }}</div>
@@ -35,7 +35,7 @@
           </div>
           <!-- 右边， 点击的组件的所有类型 -->
           <div  class="useCom">
-            <div v-for="(v,i) in componentType" :key="v" :class="i===componentIndex?'selecCom':''" @click="ModifyComponent(i)">{{ i+1 }}{{ componentIndex }}</div>
+            <div v-for="(v,i) in componentType" :key="v" :class="i===componentIndex?'selecCom':''" @click="ModifyComponent(i)">{{v.split(":")[1]}}</div>
           </div>
           <div class="ScaleRatioColumn">{{ Math.round(scale * 100) }}%</div>
         </div>
@@ -1181,7 +1181,7 @@ body,
     }
   }
   .conentBox {
-    background: rgb(63, 63, 60);
+    background: rgb(63, 63, 60) !important;
     z-index: 0;
     width: 100%;
     height: 100%;
@@ -1325,8 +1325,8 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
- width: 20px;
- height: 20px;
+padding: 0 5px;
+ height: 24px;
  border: 1px solid #ccc;
  margin-right: 10px;
  cursor: pointer;
