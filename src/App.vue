@@ -33,6 +33,10 @@
             <!-- {{ item.name.match(/\d+/g)[0] }} -->
             {{ item.name.split('kv')[1] }}
           </div>
+          <!-- 右边， 点击的组件的所有类型 -->
+          <div  class="useCom">
+            <div v-for="(v,i) in componentType" :key="v" :class="i===componentIndex?'selecCom':''" @click="ModifyComponent(i)">{{ i+1 }}{{ componentIndex }}</div>
+          </div>
           <div class="ScaleRatioColumn">{{ Math.round(scale * 100) }}%</div>
         </div>
       </div>
@@ -102,10 +106,8 @@ export default {
       originalText: "svgManualEncryption",
       EncryptContent: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸", "词奱皶揪粚纱", "隵揑窾",'剅嚈仝','寒桎仝'],
       hoveredIndex: null, // 跟踪悬停组件的索引
-      svgContent: null,
       newSvgContent: null,
       Svgname: "",
-      svgContentSrc: null,
       embedLoading: false, // 加载
       SVGTitle: "", // 窗口标题
       currentSvg: null, // SVG地址
@@ -148,14 +150,7 @@ export default {
         { type: "l", site: 100 },
         { type: "v", site: 200 }
       ],
-      // svg名称
-      Svgname: "",
-      svgContent: null,
-      newSvgContent: null,
-      Svgname: "",
-      svgContentSrc: null,
       svgDoc: "",
-      isCtrlPressed: false,
       toolColor: [
         {
           color: "rgb(0,0,255)",
@@ -203,7 +198,10 @@ export default {
       jididaozhaShow: false,
       kaiguanShowD:false,
       daozhaShowD:false,
-      jididaozhaShowD:false,
+      jididaozhaShowD: false,
+      symbol: [],
+      componentType: [],
+      componentIndex:'',
     };
   },
   components: {
@@ -256,6 +254,23 @@ export default {
           }
       })
       
+      const BreakerLayer = $('#canvas #Breaker_Layer>g>use')
+      BreakerLayer.each((i,v) => {
+        let oldxhref = v.getAttribute("xlink:href")
+        let newxhref = ""
+        // 正常只有这几种状态，其他状态没有做处理
+        if (!['_0', '_1'].includes(oldxhref.slice(-2))) {
+          alert('竟然有其他开关状态：' + oldxhref)
+        }
+        if (this.kaiguanShow) {
+          oldxhref = oldxhref.substring(0, oldxhref.length - 1)
+          newxhref = oldxhref + '1';
+        } else {
+          oldxhref = oldxhref.substring(0, oldxhref.length - 1)
+          newxhref = oldxhref + '0';
+        }
+        v.setAttribute("xlink:href", newxhref )
+      })
     },
     jididaozha () {
       this.jididaozhaShow = !this.jididaozhaShow
@@ -304,10 +319,12 @@ export default {
           $('#DollyBreaker_Layer').hide()
           $('#GroundDisconnector_Layer').hide()
           $('#Disconnector_Layer').hide()
+          $('#Breaker_Layer').hide()
         } else {
           $('#DollyBreaker_Layer').show()
           $('#GroundDisconnector_Layer').show()
           $('#Disconnector_Layer').show()
+          $('#Breaker_Layer').show()
         }
     },
     // 隐藏开关之外的
@@ -315,13 +332,13 @@ export default {
       this.hideSwitchOtherShow = !this.hideSwitchOtherShow
      		if (this.hideSwitchOtherShow) {
 			this.svgId.forEach(v => {
-				if (!['Head_Layer', 'DollyBreaker_Layer', 'GroundDisconnector_Layer', 'Disconnector_Layer'].includes(v)) {
+				if (!['Head_Layer', 'DollyBreaker_Layer', 'GroundDisconnector_Layer', 'Disconnector_Layer','Breaker_Layer'].includes(v)) {
 					$(`#${v}`).hide()
 				}
 			})
 		} else {
 			this.svgId.forEach(v => {
-				if (!['Head_Layer', 'DollyBreaker_Layer', 'GroundDisconnector_Layer', 'Disconnector_Layer'].includes(v)) {
+				if (!['Head_Layer', 'DollyBreaker_Layer', 'GroundDisconnector_Layer', 'Disconnector_Layer','Breaker_Layer'].includes(v)) {
 					$(`#${v}`).show()
 				}
 			})
@@ -407,11 +424,35 @@ export default {
     },
     // 按下鼠标
     svgClick(event) {
-      // console.log("按下坐标：：：：：：：：：：", event.target);
+      
+        // 如果是拖拽，我就清除底部的组件id切换
+        this.componentType= []
+      this.componentIndex = ''
+        
+      if (!this.selecFrame.isSelecting) {
+        // 点击我就清除之前的所有数据
+        this.handleRightClick()
+      }
       // 如果是点击的组件
       if (Math.trunc(this.selecFrame.selectionStyle.left.split("px")[0])===Math.trunc(+this.selecFrame.selectionStyle.left.split("px")[0] + +this.selecFrame.selectionStyle.width.split("px")[0]) && Math.trunc(this.selecFrame.selectionStyle.top.split("px")[0])===Math.trunc(+this.selecFrame.selectionStyle.top.split("px")[0] + +this.selecFrame.selectionStyle.height.split("px")[0])) {
-        console.log(event.target)
+        console.log('点击的同一个位置', event.target)
+        if (event.target.tagName === 'use') {
+          const href = event.target.getAttribute('xlink:href')
+          const hrefSlice=href.slice(1,-1)
+          const arrUs = []
+          this.symbol.forEach(v => {
+            if (v.includes(hrefSlice)) {
+              arrUs.push(v)
+            }
+          })
+          this.componentType = arrUs
+          this.componentIndex = arrUs.findIndex(v => v === href.slice(1))
+          console.log(href)
+          console.log(arrUs)
+          console.log(this.componentIndex)
+        }
         this.newSelectedModel = [event.target]
+        // 显示切换组件类型
         // this.newSelectedModel=[event.target]
       }
     },
@@ -481,6 +522,15 @@ export default {
       this.newSelectedModel = this.getIntersectingmodel(left, top, Mleft, Mtop);
       // console.log("选中的内容", this.newSelectedLines, this.newSelectedModel);
       window.removeEventListener("mousemove", this.updateSelecmove);
+    },
+    // 修改组件的id。 
+    ModifyComponent(v) {
+      if (this.newSelectedModel.length === 1) {
+        console.log(this.newSelectedModel[0])
+        console.log(this.componentType[v])
+        this.newSelectedModel[0].setAttribute('xlink:href', '#' + this.componentType[v])
+        this.componentIndex=v
+      }
     },
     // 返回选中的组件
     getIntersectingmodel(startX, startY, endX, endY) {
@@ -626,7 +676,7 @@ export default {
       this.startY = startY >> 0;
     },
     // 选中颜色 修改组件和线条。修改三色组件
-    cclier (v) {
+    cclier(v) {
         // 修改线条颜色
         this.newSelectedLines.forEach((lineId) => {
           lineId.setAttribute("stroke", v.color);
@@ -634,9 +684,9 @@ export default {
         // 修改组件颜色
         this.newSelectedModel.forEach((lineId) => {
           lineId.setAttribute("class", v.name);
+          console.log('选中修改颜色',lineId)
         });
         this.selecFrame = this.$options.data().selecFrame;
-
         this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
         this.newSelectedLines = [];
         this.newSelectedModel = [];
@@ -868,6 +918,12 @@ export default {
         });
       }
 
+      const useElements = this.svgDoc.querySelectorAll('svg use');
+            console.log(useElements)
+            useElements.forEach((el) => {
+              el.setAttribute('pointer-events', 'bounding-box');
+              // console.log(el)
+              });
       this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
       this.svgRecordStack.push(this.newSvgContent);
     },
@@ -940,9 +996,8 @@ export default {
         this.Svgname = this.repName(file.name);
         // console.log("获取到svg名称", this.Svgname);
         reader.onload = (e) => {
-          this.svgContent = e.target.result;
           this.newSvgContent = e.target.result;
-          this.svgContentSrc = URL.createObjectURL(file);
+          console.log(e.target.result)
           this.$nextTick(() => {
             const parser = new DOMParser();
             // 解析SVG字符串为DOM对象
@@ -955,15 +1010,23 @@ export default {
               this.svgScaleWidth = this.svgWidth * this.scale;
               this.svgScaleHeight = this.svgHeight * this.scale;
             }
+
+            // 给所有的use加点击事件
+            const useElements = this.svgDoc.querySelectorAll('svg use');
+            useElements.forEach((el) => {
+              el.setAttribute('pointer-events', 'bounding-box');
+              });
+
+
+
             //获取svg下所有类型组件的总id
             let svgIdMap = $('svg>g')
-            console.log(svgIdMap)
             const svgId = []
             svgIdMap.map((index, value) => {
               svgId.push(value.id)
                 console.log(value.id)
                 // 顺便判断有没有开关，刀闸，接地刀闸
-              if (value.id === "DollyBreaker_Layer") {
+              if (value.id === "DollyBreaker_Layer" || value.id === "Breaker_Layer") {
                 this.kaiguanShowD = true
               } else if (value.id === "GroundDisconnector_Layer") {
                 this.jididaozhaShowD = true
@@ -981,6 +1044,14 @@ export default {
             //   $(v).css('pointer-events', 'bounding-box');
             //   console.log(v)
             // });
+
+            // 获取所有symbol组件的id
+            const symbol = []
+            $('defs symbol').each((i, v) => {
+              symbol.push(v.getAttribute('id'))
+            })
+            this.symbol=symbol
+            console.log(this.symbol)
            
 
               
@@ -1235,7 +1306,7 @@ body,
   background-color: yellow !important;
 }
 .div32{
-isplay: flex;
+    display: flex;
     flex-direction: column;
 }
 .div32>div{
@@ -1246,5 +1317,21 @@ isplay: flex;
   border: 1px solid #0c0c0c;
 
 }
-
+.useCom{
+  margin-left: 100px;
+  display: flex;
+}
+.useCom>div{    
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ width: 20px;
+ height: 20px;
+ border: 1px solid #ccc;
+ margin-right: 10px;
+ cursor: pointer;
+}
+.useCom>.selecCom{
+ background: red;
+}
 </style>
