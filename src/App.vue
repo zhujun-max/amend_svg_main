@@ -233,12 +233,12 @@ export default {
       deep: true
     },
     newSvgContent: {
-      handler(v) {
-        console.log("dom有变化");
+      handler(ne,ol) {
+        console.log("dom有变化",ne===ol);
         if (this.chehui) {
           this.chehui=false
         } else {
-          this.svgRecordStack.push(v)
+          this.svgRecordStack.push(ol)
         }
       },
       deep: true
@@ -449,7 +449,8 @@ export default {
     PreviousStep() {
       console.log(this.svgRecordStack);
       this.chehui=true
-      this.newSvgContent=this.svgRecordStack.pop()
+      this.newSvgContent = this.svgRecordStack.pop()
+      this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
     },
     // 导出svg
     copeSvg() {
