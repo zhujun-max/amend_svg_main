@@ -5,16 +5,16 @@
       <input type="file" accept=".svg" @change="handleFileUpload" ref="fileInput" style="display: none" />
       <!-- top -->
       <div class="top" v-if="!Preview">
-        <img src="./statc/xiugai.png" alt="一键修改" title="一键修改" @click="basics()" class="basicsXiu" />
+        <img src="./statc/xiugai.png" alt="一键修改"  :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu"/>
         <button @click="triggerFileUpload()">导入</button>
-        <button @click="copeSvg()">导出</button>
-        <button @click="PreviousStep()">回退至上一步</button>
+        <button @click="copeSvg()" :disabled="!newSvgContent">导出</button>
+        <button @click="PreviousStep()" :disabled="!svgRecordStack.length">回退至上一步</button>
       </div>
       <!-- left -->
       <div class="left">
-        <div @click="RemoveColor()" class="romColor" title="去掉默认颜色">/</div>
+        <div @click="RemoveColor()" class="romColor" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview?'opacity: 0;cursor: none !important;':''">/</div>
         <!-- <div class="jianch" @click="jiancha()">12</div> -->
-        <div class="yulan" @click="yulan()">{{ Preview ? "退出预览" : "预览模式" }}</div>
+        <div class="yulan" @click="yulan()"  :disabled="!newSvgContent">{{ Preview ? "退出预览" : "预览模式" }}</div>
         <div v-if="Preview" class="div32">
           <div @click="hideSwitch()" :class="hideSwitchShow ? 'backRed' : ''">隐藏接口组件</div>
           <div @click="hideSwitchOther()" :class="hideSwitchOtherShow ? 'backRed' : ''">隐藏接口以外组件</div>
@@ -194,7 +194,8 @@ export default {
       componentIndex: "",
       colorShow: false,
       // 撤回的状态
-      chehui: false
+      chehui: false,
+      setObj:{}
     };
   },
   components: {
@@ -218,21 +219,8 @@ export default {
     }
   },
   watch: {
-    newSelectedLines: {
-      handler(v) {
-        console.log("线条", v);
-      },
-      deep: true
-    },
-    newSelectedModel: {
-      handler(v) {
-        console.log("组件", v);
-      },
-      deep: true
-    },
     newSvgContent: {
       handler(ne, ol) {
-        console.log("dom有变化", ne === ol);
         if (this.chehui) {
           this.chehui = false;
         } else {
@@ -258,22 +246,36 @@ export default {
       // 返回生成的6位随机字符串
       return id;
     },
+    // 添加关联数据的方法
+    addAssociation(id, data) {
+      // 如果id不存在于关联对象中，先创建它并初始化为空数组
+      if (!(id in this.setObj)) {
+        this.setObj[id] = [];
+      }
+      // 将数据添加到与该id关联的数组中
+      this.setObj[id].push(data);
+    },
     // 创建一个新的class，用于同一个组件，多个背景颜色情况。。。。。。。没实现
     addIDS() {
       console.log(this.symbol);
       this.componentType.forEach((id) => {
+        const correctRegex = /\:\^/;
+        // 如果当前的id就是后续添加的，我就不用克隆了
+        if(correctRegex.test(id))return
         // 查找原始的symbol元素
         const symbol = this.svgDoc.getElementById(id);
         if (symbol) {
           // 创建一个新的symbol元素的克隆
           const newSymbol = symbol.cloneNode(true);
 
-          // 修改新symbol的ID，在:号后面添加1
+          // 修改新symbol的ID
           let nameIdS = id.split(":");
           nameIdS[1] = `^${this.generateSixDigitId()}^` + nameIdS[1];
           const nameId = nameIdS.join(":");
           newSymbol.setAttribute("id", nameId);
           console.log(nameId);
+          // 将旧名称和新名称导入到关联表中
+          this.addAssociation(id,nameId)
 
           // 创建一个临时的<defs>元素（如果svgContainer中没有的话）
           let defs = this.svgDoc.querySelector("defs");
@@ -288,24 +290,20 @@ export default {
           console.log("defs::: ", defs);
         }
       });
+
       this.$nextTick(() => {
-        // 循环所有组件的id，将id重新赋值
-        const symbol = [];
-        $("defs symbol").each((i, v) => {
-          symbol.push(v.getAttribute("id"));
-        });
-        this.symbol = symbol;
-        console.log("symbol::: ", symbol);
-        // 添加完后，需要重新查找原有的
-        const hrefSlice = this.componentType[0].slice(1, -1);
-        const arrUs = [];
-        this.symbol.forEach((v) => {
-          if (v.includes(hrefSlice)) {
-            arrUs.push(v);
-          }
-        });
-        this.componentType = arrUs;
+        this.componentType = this.componentLI()
       });
+    },
+    // 根据底部的id名来查找之前添加的有关联的id。
+    componentLI(){
+      const arrCom=JSON.parse(JSON.stringify(this.componentType))
+      this.componentType.forEach(v=>{
+        if(this.setObj[v]){
+          arrCom.push(...this.setObj[v])
+        }
+      })
+      return arrCom
     },
     // 切换开关的状态（临时观看，不用保存状态，所以用jquery也无所谓）
     kaiguan() {
@@ -455,44 +453,41 @@ export default {
         alert("请先导入svg文件");
         return;
       }
-      // 先将导入时创建的rect删除
-      // 找到 id 为 DollyBreaker_Layer 的元素
-      const dollyBreakerLayer = this.svgDoc.getElementById("DollyBreaker_Layer");
-
+      let newSvgContentDc=this.newSvgContent
+      const parser = new DOMParser();
+      const svgDocD = parser.parseFromString(newSvgContentDc, "image/svg+xml");
+      // 如果有当前组件，就去掉之前添加红色块
+      const dollyBreakerLayer = svgDocD.getElementById("DollyBreaker_Layer");
       if (dollyBreakerLayer) {
-        // 找到 DollyBreaker_Layer 下所有的 rect 标签
-        const rectElements = dollyBreakerLayer.getElementsByTagName("rect");
-
-        // 将 HTMLCollection 转换为数组并遍历
-        Array.from(rectElements).forEach((rectElement) => {
-          // 删除每个 rect 元素
-          dollyBreakerLayer.removeChild(rectElement);
+        const dollyBreakerLayer = this.svgDoc.querySelectorAll("#DollyBreaker_Layer rect");
+        dollyBreakerLayer.forEach((textElement) => {
+          textElement.parentNode.removeChild(textElement);
         });
 
-        // 更新 newSvgContent 中的内容
-        this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+        newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
       }
+      this.$nextTick(() => {
+        // 创建一个Blob对象
+        const blob = new Blob([newSvgContentDc], {
+          type: "image/svg+xml;charset=utf-8"
+        });
 
-      // 创建一个Blob对象
-      const blob = new Blob([this.newSvgContent], {
-        type: "image/svg+xml;charset=utf-8"
+        // 创建一个数据URL
+        const url = URL.createObjectURL(blob);
+
+        // 创建一个链接元素
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = this.Svgname; // 设置下载的文件名
+
+        // 触发下载
+        document.body.appendChild(link);
+        link.click();
+
+        // 清理
+        URL.revokeObjectURL(url);
+        document.body.removeChild(link);
       });
-
-      // 创建一个数据URL
-      const url = URL.createObjectURL(blob);
-
-      // 创建一个链接元素
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = this.Svgname; // 设置下载的文件名
-
-      // 触发下载
-      document.body.appendChild(link);
-      link.click();
-
-      // 清理
-      URL.revokeObjectURL(url);
-      document.body.removeChild(link);
     },
     // 鼠标移入（啥也没干）
     mouseover(event) {
@@ -539,30 +534,37 @@ export default {
                 }
               });
               this.componentType = arrUs;
+              this.componentType=this.componentLI()
               console.log("componentType::: ", this.componentType);
               this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
               console.log("componentIndex::: ", this.componentIndex);
               this.newSelectedModel = [targetUseElement];
             }
             if (event.target.tagName === "rect" && event.target.getAttribute("xlink:href")) {
-              console.log(parentElement);
-              const targetRectElement = Array.from(parentElement.querySelectorAll("rect")).find((el) => el.getAttribute("xlink:href") === xlinkHref);
-              // 根据点击的元素找到兄弟级的use元素
-              console.log("ffffffs", targetRectElement);
-              const parentG = targetRectElement.parentElement;
-              // 获取所有兄弟use元素（在同一g元素下的其他use元素）
-              const siblingUses = parentG.getElementsByTagName("use")[0];
-              const href = siblingUses.getAttribute("xlink:href");
-              const hrefSlice = href.slice(1, -1);
-              const arrUs = [];
-              this.symbol.forEach((v) => {
-                if (v.includes(hrefSlice)) {
-                  arrUs.push(v);
+              const elementsWithId = this.svgDoc.querySelectorAll(`[id="${parentId}"]`);
+              console.log(elementsWithId);
+              console.log("id:", parentId);
+              // 遍历这些元素
+              elementsWithId.forEach((element) => {
+                // 检查当前元素是否包含<rect>标签
+                const rectElement = element.querySelector("rect");
+                if (rectElement) {
+                  const parentG = rectElement.parentElement;
+                  // 获取所有兄弟use元素（在同一g元素下的其他use元素）
+                  const siblingUses = parentG.getElementsByTagName("use")[0];
+                  const href = siblingUses.getAttribute("xlink:href");
+                  const hrefSlice = href.slice(1, -1);
+                  const arrUs = [];
+                  this.symbol.forEach((v) => {
+                    if (v.includes(hrefSlice)) {
+                      arrUs.push(v);
+                    }
+                  });
+                  this.componentType = arrUs;
+                  this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
+                  this.newSelectedModel = [siblingUses];
                 }
               });
-              this.componentType = arrUs;
-              this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
-              this.newSelectedModel = [siblingUses];
             }
 
             this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
@@ -907,6 +909,7 @@ export default {
           rect.setAttribute("height", "16");
           rect.setAttribute("transform", $use.getAttribute("transform"));
           rect.setAttribute("xlink:href", $use.getAttribute("xlink:href"));
+          rect.setAttribute("pointer-events", "bounding-box");
           // 给外层的use添加一个颜色，是方便后续看到好点击，导出的时候会把这个rect去掉
           rect.setAttribute("fill", "#bc1111a3");
           el.appendChild(rect);
@@ -1448,5 +1451,10 @@ body,
 }
 .backRed {
   background: red;
+}
+[disabled="disabled"]{
+  opacity: 0.5;
+  cursor: no-drop !important;
+  pointer-events: none;
 }
 </style>
