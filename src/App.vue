@@ -16,11 +16,11 @@
         <!-- <div class="jianch" @click="jiancha()">12</div> -->
         <div class="yulan" @click="yulan()">{{ Preview ? "退出预览" : "预览模式" }}</div>
         <div v-if="Preview" class="div32">
-          <div @click="hideSwitch()" :class="hideSwitchShow?'backRed':''">隐藏接口组件</div>
-          <div @click="hideSwitchOther()" :class="hideSwitchOtherShow?'backRed':''">隐藏接口以外组件</div>
-          <div @click="kaiguan" v-if="kaiguanShowD" :class="kaiguanShow?'backRed':''">开关</div>
-          <div @click="jididaozha" v-if="jididaozhaShowD" :class="jididaozhaShow?'backRed':''">接地刀闸</div>
-          <div @click="daozha" v-if="daozhaShowD" :class="daozhaShow?'backRed':''">刀闸</div>
+          <div @click="hideSwitch()" :class="hideSwitchShow ? 'backRed' : ''">隐藏接口组件</div>
+          <div @click="hideSwitchOther()" :class="hideSwitchOtherShow ? 'backRed' : ''">隐藏接口以外组件</div>
+          <div @click="kaiguan" v-if="kaiguanShowD" :class="kaiguanShow ? 'backRed' : ''">开关</div>
+          <div @click="jididaozha" v-if="jididaozhaShowD" :class="jididaozhaShow ? 'backRed' : ''">接地刀闸</div>
+          <div @click="daozha" v-if="daozhaShowD" :class="daozhaShow ? 'backRed' : ''">刀闸</div>
         </div>
       </div>
       <!-- right -->
@@ -37,12 +37,12 @@
           <div class="useCom">
             <div v-for="(v, i) in componentType" :key="v" :class="i === componentIndex ? 'selecCom' : ''">
               <div class="use_co" @click="ModifyComponent(i)">{{ v.split(":")[1] }}</div>
-              <div class="use_clo" v-if="componentIndex===i">
-                <div v-for="(item, i) in toolColor" :key="i" @click="dianji1(item)" :style="'background-color:' + item.color"  class="clordr"></div>
-                <div class="clordr"  @click="dianji1({color:none})">空</div>
+              <div class="use_clo" v-if="componentIndex === i">
+                <div v-for="(item, i) in toolColor" :key="i" @click="dianji1(item)" :style="'background-color:' + item.color" class="clordr"></div>
+                <div class="clordr" @click="dianji1({ color: none })">空</div>
               </div>
             </div>
-            <div class="addID"  @click="addIDS">+</div>
+            <div class="addID" @click="addIDS">+</div>
           </div>
           <div class="ScaleRatioColumn">{{ Math.round(scale * 100) }}%</div>
         </div>
@@ -194,7 +194,7 @@ export default {
       componentIndex: "",
       colorShow: false,
       // 撤回的状态
-      chehui:false
+      chehui: false
     };
   },
   components: {
@@ -231,12 +231,12 @@ export default {
       deep: true
     },
     newSvgContent: {
-      handler(ne,ol) {
-        console.log("dom有变化",ne===ol);
+      handler(ne, ol) {
+        console.log("dom有变化", ne === ol);
         if (this.chehui) {
-          this.chehui=false
+          this.chehui = false;
         } else {
-          this.svgRecordStack.push(ol)
+          this.svgRecordStack.push(ol);
         }
       },
       deep: true
@@ -246,7 +246,7 @@ export default {
     // 六位随机数字
     generateSixDigitId() {
       // 创建一个空字符串来存储生成的数字
-      let id = '';
+      let id = "";
       // 循环6次，每次生成一个0-9之间的随机数字，并将其添加到id字符串中
       for (let i = 0; i < 15; i++) {
         // Math.random()生成一个0到1之间的浮点数
@@ -254,59 +254,58 @@ export default {
         // 使用toString()确保数字被添加到字符串中
         id += Math.floor(Math.random() * 10).toString();
       }
-      
+
       // 返回生成的6位随机字符串
       return id;
     },
     // 创建一个新的class，用于同一个组件，多个背景颜色情况。。。。。。。没实现
     addIDS() {
-      console.log(this.symbol)
-      this.componentType.forEach(id => {
-            // 查找原始的symbol元素
-            const symbol = this.svgDoc.getElementById(id);
-            if (symbol) {
-                // 创建一个新的symbol元素的克隆
-                const newSymbol = symbol.cloneNode(true);
- 
-              // 修改新symbol的ID，在:号后面添加1
-              let nameIdS = id.split(":")
-              nameIdS[1]= `^${this.generateSixDigitId()}^`+nameIdS[1]
-              const nameId=nameIdS.join(':')
-              newSymbol.setAttribute('id', nameId);
-              console.log(nameId)
- 
-                // 创建一个临时的<defs>元素（如果svgContainer中没有的话）
-                let defs = this.svgDoc.querySelector('defs');
-                if (!defs) {
-                    defs = this.svgDoc.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                    this.svgDoc.appendChild(defs);
-                }
- 
-                // 将新克隆的<symbol>添加到<defs>中
-              defs.appendChild(newSymbol);
-              this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
-                console.log('defs::: ', defs);
-            }
+      console.log(this.symbol);
+      this.componentType.forEach((id) => {
+        // 查找原始的symbol元素
+        const symbol = this.svgDoc.getElementById(id);
+        if (symbol) {
+          // 创建一个新的symbol元素的克隆
+          const newSymbol = symbol.cloneNode(true);
+
+          // 修改新symbol的ID，在:号后面添加1
+          let nameIdS = id.split(":");
+          nameIdS[1] = `^${this.generateSixDigitId()}^` + nameIdS[1];
+          const nameId = nameIdS.join(":");
+          newSymbol.setAttribute("id", nameId);
+          console.log(nameId);
+
+          // 创建一个临时的<defs>元素（如果svgContainer中没有的话）
+          let defs = this.svgDoc.querySelector("defs");
+          if (!defs) {
+            defs = this.svgDoc.createElementNS("http://www.w3.org/2000/svg", "defs");
+            this.svgDoc.appendChild(defs);
+          }
+
+          // 将新克隆的<symbol>添加到<defs>中
+          defs.appendChild(newSymbol);
+          this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+          console.log("defs::: ", defs);
+        }
       });
-      this.$nextTick(()=>{
-      // 循环所有组件的id，将id重新赋值
-      const symbol = [];
-      $("defs symbol").each((i, v) => {
-        symbol.push(v.getAttribute("id"));
+      this.$nextTick(() => {
+        // 循环所有组件的id，将id重新赋值
+        const symbol = [];
+        $("defs symbol").each((i, v) => {
+          symbol.push(v.getAttribute("id"));
+        });
+        this.symbol = symbol;
+        console.log("symbol::: ", symbol);
+        // 添加完后，需要重新查找原有的
+        const hrefSlice = this.componentType[0].slice(1, -1);
+        const arrUs = [];
+        this.symbol.forEach((v) => {
+          if (v.includes(hrefSlice)) {
+            arrUs.push(v);
+          }
+        });
+        this.componentType = arrUs;
       });
-      this.symbol = symbol;
-      console.log('symbol::: ', symbol);
-            // 添加完后，需要重新查找原有的
-          const hrefSlice = this.componentType[0].slice(1, -1);
-          const arrUs = [];
-          this.symbol.forEach((v) => {
-            if (v.includes(hrefSlice)) {
-              arrUs.push(v);
-            }
-          });
-      this.componentType = arrUs;
-    })  
-            
     },
     // 切换开关的状态（临时观看，不用保存状态，所以用jquery也无所谓）
     kaiguan() {
@@ -432,21 +431,21 @@ export default {
       this.Preview = !this.Preview;
       if (this.Preview) {
         // 深克隆 SVG DOM（深度克隆包括所有子节点）
-        this.newSvgContentCopy = new XMLSerializer().serializeToString(this.$refs.containerRef.querySelector('svg').cloneNode(true));
+        this.newSvgContentCopy = new XMLSerializer().serializeToString(this.$refs.containerRef.querySelector("svg").cloneNode(true));
         // 禁止svg框选。
         this.$refs.containerRef.style.pointerEvents = "none";
         // 关闭之前的框选弹窗
         this.handleRightClick();
       } else {
         // svg还原
-        this.newSvgContent=this.newSvgContentCopy;
+        this.newSvgContent = this.newSvgContentCopy;
         this.$refs.containerRef.style.pointerEvents = "all";
       }
     },
     // 回退至上一步
     PreviousStep() {
-      this.chehui=true
-      this.newSvgContent = this.svgRecordStack.pop()
+      this.chehui = true;
+      this.newSvgContent = this.svgRecordStack.pop();
       const parser = new DOMParser();
       this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
     },
@@ -457,13 +456,13 @@ export default {
         return;
       }
       // 先将导入时创建的rect删除
-     // 找到 id 为 DollyBreaker_Layer 的元素
+      // 找到 id 为 DollyBreaker_Layer 的元素
       const dollyBreakerLayer = this.svgDoc.getElementById("DollyBreaker_Layer");
-      
+
       if (dollyBreakerLayer) {
-         // 找到 DollyBreaker_Layer 下所有的 rect 标签
+        // 找到 DollyBreaker_Layer 下所有的 rect 标签
         const rectElements = dollyBreakerLayer.getElementsByTagName("rect");
-        
+
         // 将 HTMLCollection 转换为数组并遍历
         Array.from(rectElements).forEach((rectElement) => {
           // 删除每个 rect 元素
@@ -518,63 +517,57 @@ export default {
         console.log("点击的同一个位置", event.target);
         const parser = new DOMParser();
         this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
-        this.$forceUpdate()
+        this.$forceUpdate();
         // 1. 使用svgDoc来修改dom，先找到dom的具体位置。（直接修改dom是无效的，所以通过svgDoc来修改）
         const targetElement = event.target;
         const parentId = targetElement.parentElement ? targetElement.parentElement.id : null;
-        if(parentId){
-            // 获取父元素
-        const parentElement = this.svgDoc.getElementById(parentId);
-        if(parentElement){
-          
-        const xlinkHref = targetElement.getAttribute('xlink:href');
-        console.log('id名',xlinkHref)
-          
-          if (event.target.tagName === "use") {
-             const targetUseElement = Array.from(parentElement.querySelectorAll("use")).find(
-              (el) => el.getAttribute("xlink:href") === xlinkHref
-            );
-            const href = targetUseElement.getAttribute("xlink:href");
-          const hrefSlice = href.slice(1, -1);
-          const arrUs = [];
-          this.symbol.forEach((v) => {
-            if (v.includes(hrefSlice)) {
-              arrUs.push(v);
+        if (parentId) {
+          // 获取父元素
+          const parentElement = this.svgDoc.getElementById(parentId);
+          if (parentElement) {
+            const xlinkHref = targetElement.getAttribute("xlink:href");
+            console.log("id名", xlinkHref);
+
+            if (event.target.tagName === "use") {
+              const targetUseElement = Array.from(parentElement.querySelectorAll("use")).find((el) => el.getAttribute("xlink:href") === xlinkHref);
+              const href = targetUseElement.getAttribute("xlink:href");
+              const hrefSlice = href.slice(1, -1);
+              const arrUs = [];
+              this.symbol.forEach((v) => {
+                if (v.includes(hrefSlice)) {
+                  arrUs.push(v);
+                }
+              });
+              this.componentType = arrUs;
+              console.log("componentType::: ", this.componentType);
+              this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
+              console.log("componentIndex::: ", this.componentIndex);
+              this.newSelectedModel = [targetUseElement];
             }
-          });
-          this.componentType = arrUs;
-          console.log("componentType::: ", this.componentType);
-          this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
-          console.log("componentIndex::: ", this.componentIndex);
-          this.newSelectedModel = [targetUseElement];
-        }
-        if (event.target.tagName === "rect" && event.target.getAttribute("xlink:href")) {
-          console.log(parentElement)
-           const targetRectElement = Array.from(parentElement.querySelectorAll("rect")).find(
-          (el) => el.getAttribute("xlink:href") === xlinkHref
-        );
-          // 根据点击的元素找到兄弟级的use元素
-          console.log('ffffffs',targetRectElement)
-          const parentG = targetRectElement.parentElement;
-          // 获取所有兄弟use元素（在同一g元素下的其他use元素）
-          const siblingUses = parentG.getElementsByTagName("use")[0];
-          const href = siblingUses.getAttribute("xlink:href");
-          const hrefSlice = href.slice(1, -1);
-          const arrUs = [];
-          this.symbol.forEach((v) => {
-            if (v.includes(hrefSlice)) {
-              arrUs.push(v);
+            if (event.target.tagName === "rect" && event.target.getAttribute("xlink:href")) {
+              console.log(parentElement);
+              const targetRectElement = Array.from(parentElement.querySelectorAll("rect")).find((el) => el.getAttribute("xlink:href") === xlinkHref);
+              // 根据点击的元素找到兄弟级的use元素
+              console.log("ffffffs", targetRectElement);
+              const parentG = targetRectElement.parentElement;
+              // 获取所有兄弟use元素（在同一g元素下的其他use元素）
+              const siblingUses = parentG.getElementsByTagName("use")[0];
+              const href = siblingUses.getAttribute("xlink:href");
+              const hrefSlice = href.slice(1, -1);
+              const arrUs = [];
+              this.symbol.forEach((v) => {
+                if (v.includes(hrefSlice)) {
+                  arrUs.push(v);
+                }
+              });
+              this.componentType = arrUs;
+              this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
+              this.newSelectedModel = [siblingUses];
             }
-          });
-          this.componentType = arrUs;
-          this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
-          this.newSelectedModel = [siblingUses];
-        }
-        
-      this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
-        // 显示切换组件类型
-        
-        }
+
+            this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+            // 显示切换组件类型
+          }
         }
       }
     },
@@ -646,7 +639,7 @@ export default {
       if (this.newSelectedModel.length === 1) {
         this.newSelectedModel[0].setAttribute("xlink:href", "#" + this.componentType[v]);
         this.componentIndex = v;
-      this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+        this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
       }
     },
     // 返回选中区域的组件
@@ -661,10 +654,10 @@ export default {
       // 定义一个函数来检查线段是否与矩形相交
       const doesLineIntersectRect = (v) => {
         // 获取线段的两个端点坐标。并且还要*缩放比例
-        const sx = parseInt(v.getAttribute("x")) * this.scale; 
-        const sy = parseInt(v.getAttribute("y")) * this.scale; 
+        const sx = parseInt(v.getAttribute("x")) * this.scale;
+        const sy = parseInt(v.getAttribute("y")) * this.scale;
         const ex = sx + parseInt(v.getAttribute("width")) * this.scale;
-        const ey = sy + parseInt(v.getAttribute("height")) * this.scale; 
+        const ey = sy + parseInt(v.getAttribute("height")) * this.scale;
 
         // 检查线段的两个端点是否在矩形内
         if (isPointInRect(sx, sy) || isPointInRect(ex, ey)) {
@@ -780,25 +773,25 @@ export default {
       this.startY = startY >> 0;
     },
     // 修改组件默认颜色，（改组件填充色）
-    dianji1(v){
+    dianji1(v) {
       if (this.newSelectedModel.length === 1) {
-          console.log(this.componentType[this.componentIndex])
-            const symbol = this.svgDoc.getElementById(this.componentType[this.componentIndex]);
-            if (symbol) {
-              const rect = symbol.querySelector('rect');
-              if (rect) {
-                rect.setAttribute('fill', v.color);
-              this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
-              }
-            } else {
-              console.error('没有找到我需要的组件，不应该呀');
-            }
+        console.log(this.componentType[this.componentIndex]);
+        const symbol = this.svgDoc.getElementById(this.componentType[this.componentIndex]);
+        if (symbol) {
+          const rect = symbol.querySelector("rect");
+          if (rect) {
+            rect.setAttribute("fill", v.color);
+            this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+          }
+        } else {
+          console.error("没有找到我需要的组件，不应该呀");
+        }
       }
     },
     // 选中颜色 修改组件和线条。修改三色组件
     cclier(v) {
-      console.log('修改线条颜色::: ', this.newSelectedLines);
-      console.log('修改组件颜色::: ', this.newSelectedModel);
+      console.log("修改线条颜色::: ", this.newSelectedLines);
+      console.log("修改组件颜色::: ", this.newSelectedModel);
       // 修改线条颜色
       this.newSelectedLines.forEach((lineId) => {
         lineId.setAttribute("stroke", v.color);
@@ -861,14 +854,14 @@ export default {
         // 删除当前标签
         textElement.parentNode.removeChild(textElement);
       });
-      
+
       // 3. 修改背景颜色
       const elements3 = this.svgDoc.querySelectorAll("#Head_Layer>rect");
       elements3.forEach(function (element) {
         // 设置填充颜色为蓝色
         element.setAttribute("fill", "rgb(0,47,71)");
       });
-      
+
       // 4.修改遮挡背景
       const elements4copy = this.svgDoc.querySelectorAll("#Link_Layer>g>path");
       const elements4s = this.svgDoc.querySelectorAll("#ACLineSegment_Layer>g>path");
@@ -884,41 +877,41 @@ export default {
         }
       });
 
-        // 5. 给所有的use加点击事件（由于所有组件只能点击边框才行，实在不方便）
-        const useElements = this.svgDoc.querySelectorAll("svg use");
-        useElements.forEach((el) => {
-          el.setAttribute("pointer-events", "bounding-box");
-        });
-        // 给DollyBreaker_Layer组件的外层添加可点击的事件（将DollyBreaker_Layer标签外层的div的pointer-events去掉，不然会影响内部元素的点击）
-        let $gs = this.svgDoc.querySelectorAll("#DollyBreaker_Layer g");
-        // 创建一个map来存储每个id出现的次数
-        var idCountMap = {};
-        $gs.forEach((el) => {
-          var id = el.getAttribute("id");
-          if (idCountMap[id]) {
-            idCountMap[id]++;
-          } else {
-            idCountMap[id] = 1;
-          }
-          // 如果是相同id的第二个g标签
-          if (idCountMap[id] === 2) {
-            var $use = el.querySelectorAll("use")[0];
-            // 移除pointer-events属性
-            $use.removeAttribute("pointer-events");
+      // 5. 给所有的use加点击事件（由于所有组件只能点击边框才行，实在不方便）
+      const useElements = this.svgDoc.querySelectorAll("svg use");
+      useElements.forEach((el) => {
+        el.setAttribute("pointer-events", "bounding-box");
+      });
+      // 给DollyBreaker_Layer组件的外层添加可点击的事件（将DollyBreaker_Layer标签外层的div的pointer-events去掉，不然会影响内部元素的点击）
+      let $gs = this.svgDoc.querySelectorAll("#DollyBreaker_Layer g");
+      // 创建一个map来存储每个id出现的次数
+      var idCountMap = {};
+      $gs.forEach((el) => {
+        var id = el.getAttribute("id");
+        if (idCountMap[id]) {
+          idCountMap[id]++;
+        } else {
+          idCountMap[id] = 1;
+        }
+        // 如果是相同id的第二个g标签
+        if (idCountMap[id] === 2) {
+          var $use = el.querySelectorAll("use")[0];
+          // 移除pointer-events属性
+          $use.removeAttribute("pointer-events");
 
-            // 创建rect元素，完全复制一份use组件，为了实现外层组件可点击，用于修改外层组件的样式。
-            const rect = this.svgDoc.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute("x", $use.getAttribute("x"));
-            rect.setAttribute("y", $use.getAttribute("y"));
-            rect.setAttribute("width", $use.getAttribute("width"));
-            rect.setAttribute("height", "16");
-            rect.setAttribute("transform", $use.getAttribute("transform"));
-            rect.setAttribute("xlink:href", $use.getAttribute("xlink:href"));
-            // 给外层的use添加一个颜色，是方便后续看到好点击，导出的时候会把这个rect去掉
-            rect.setAttribute("fill", "#bc1111a3");
-            el.appendChild(rect);
-          }
-        });
+          // 创建rect元素，完全复制一份use组件，为了实现外层组件可点击，用于修改外层组件的样式。
+          const rect = this.svgDoc.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("x", $use.getAttribute("x"));
+          rect.setAttribute("y", $use.getAttribute("y"));
+          rect.setAttribute("width", $use.getAttribute("width"));
+          rect.setAttribute("height", "16");
+          rect.setAttribute("transform", $use.getAttribute("transform"));
+          rect.setAttribute("xlink:href", $use.getAttribute("xlink:href"));
+          // 给外层的use添加一个颜色，是方便后续看到好点击，导出的时候会把这个rect去掉
+          rect.setAttribute("fill", "#bc1111a3");
+          el.appendChild(rect);
+        }
+      });
 
       // 6.删除可以跳转的标签，删除a标签的xlink:href属性
       const hrefSkip = this.svgDoc.querySelectorAll("a");
@@ -987,12 +980,11 @@ export default {
         });
       }
 
-
       // 做完修改dom操作，一定要解析为字符串，好渲染到页面中
       this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
     },
     // 删除组件内的颜色（除开圆点图案）
-    RemoveColor(){
+    RemoveColor() {
       const elements5 = this.svgDoc.querySelectorAll("defs>symbol>*");
       const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
       let circleName = [];
@@ -1091,14 +1083,14 @@ export default {
         reader.onload = (e) => {
           // svg，在页面使用v-html渲染。（切记：不能直接通过获取dom来修改元素，不然状态保持不住）
           this.newSvgContent = e.target.result;
-          this.svgRecordStack=[]
+          this.svgRecordStack = [];
           this.$nextTick(() => {
             const parser = new DOMParser();
             // 解析SVG字符串为DOM对象（切记：如果要修改dom，只能通过修改svgDoc来修改dom，还需要将svgDoc转为字符串=newSvgContent）
             this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
-            
+
             // 以下操作，都不会修改元素
-            
+
             // 1. 获取svg宽高尺寸。不修改元素
             const svg = this.svgDoc.querySelector("svg");
             if (svg) {
@@ -1132,9 +1124,9 @@ export default {
             this.symbol = symbol;
 
             // 4. svg靠左上角对齐
-            this.$refs.screensRef.scrollLeft = 0;  // 滚动到最左边
-            this.$refs.screensRef.scrollTop = 0;   // 滚动到顶部
-            
+            this.$refs.screensRef.scrollLeft = 0; // 滚动到最左边
+            this.$refs.screensRef.scrollTop = 0; // 滚动到顶部
+
             // 5. 修改尺子的尺寸
             this.$nextTick(() => {
               this.initSize();
@@ -1156,8 +1148,8 @@ export default {
       this.EncryptContent[index] = this.xorEncryptDecrypt(v);
     });
     // svg靠左上角对齐
-    this.$refs.screensRef.scrollLeft = 0
-    this.$refs.screensRef.scrollTop = 0; 
+    this.$refs.screensRef.scrollLeft = 0;
+    this.$refs.screensRef.scrollTop = 0;
     window.addEventListener("resize", this.handleResize);
     this.$nextTick(() => {
       this.initSize();
@@ -1376,30 +1368,30 @@ body,
   cursor: pointer;
 }
 .yulan {
-      text-align: center;
-    font-size: 14px;
+  text-align: center;
+  font-size: 14px;
   margin-top: 10px;
   width: 24px;
   color: #fff;
   border: 1px solid #ccc;
   cursor: pointer;
-    user-select: none;
+  user-select: none;
 }
 .div32 {
   display: flex;
   flex-direction: column;
 }
 .div32 > div {
-      text-align: center;
-    font-size: 14px;
+  text-align: center;
+  font-size: 14px;
   width: 24px;
   // height: 24px;
   display: flex;
   margin-top: 12px;
   border: 1px solid #ccc;
-      cursor: pointer;
-    user-select: none;
-    color: #fff;
+  cursor: pointer;
+  user-select: none;
+  color: #fff;
 }
 .useCom {
   margin-left: 100px;
@@ -1424,7 +1416,7 @@ body,
   background: red;
 }
 
-.clordr{
+.clordr {
   width: 24px;
   height: 24px;
   border: 1px solid #2f2f2c;
@@ -1432,30 +1424,29 @@ body,
   align-items: center;
   justify-content: center;
 }
-.use_clo{
+.use_clo {
   display: flex;
   border: 1px solid #ccc;
 }
-.addID{
+.addID {
   width: 20px;
   height: 20px;
   border: 1px solid #ccc;
   cursor: pointer;
-
 }
-.romColor{
+.romColor {
   border: 1px solid #ccc;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: red;
-    color: #ffffff;
-    font-size: 15px;
-    cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: red;
+  color: #ffffff;
+  font-size: 15px;
+  cursor: pointer;
 }
-.backRed{
+.backRed {
   background: red;
 }
 </style>
