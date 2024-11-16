@@ -449,46 +449,48 @@ export default {
     },
     // 导出svg
     copeSvg() {
-      if (!this.newSvgContent) {
-        alert("请先导入svg文件");
-        return;
-      }
-      let newSvgContentDc=this.newSvgContent
-      const parser = new DOMParser();
-      const svgDocD = parser.parseFromString(newSvgContentDc, "image/svg+xml");
-      // 如果有当前组件，就去掉之前添加红色块
-      const dollyBreakerLayer = svgDocD.getElementById("DollyBreaker_Layer");
-      if (dollyBreakerLayer) {
-        const dollyBreakerLayer = this.svgDoc.querySelectorAll("#DollyBreaker_Layer rect");
-        dollyBreakerLayer.forEach((textElement) => {
-          textElement.parentNode.removeChild(textElement);
-        });
+  if (!this.newSvgContent) {
+    alert("请先导入svg文件");
+    return;
+  }
+  let newSvgContentDc = this.newSvgContent;
+  const parser = new DOMParser();
+  const svgDocD = parser.parseFromString(newSvgContentDc, "image/svg+xml");
+  // 如果有当前组件，就去掉之前添加红色块
+  const dollyBreakerLayer = svgDocD.getElementById("DollyBreaker_Layer");
+  if (dollyBreakerLayer) {
+    // 在dollyBreakerLayer上查找所有的rect元素
+    const rects = dollyBreakerLayer.querySelectorAll("rect");
+    rects.forEach((rectElement) => {
+      rectElement.parentNode.removeChild(rectElement);
+    });
 
-        newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
-      }
-      this.$nextTick(() => {
-        // 创建一个Blob对象
-        const blob = new Blob([newSvgContentDc], {
-          type: "image/svg+xml;charset=utf-8"
-        });
+    // 更新SVG内容
+    newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
+  }
+  this.$nextTick(() => {
+    // 创建一个Blob对象
+    const blob = new Blob([newSvgContentDc], {
+      type: "image/svg+xml;charset=utf-8"
+    });
 
-        // 创建一个数据URL
-        const url = URL.createObjectURL(blob);
+    // 创建一个数据URL
+    const url = URL.createObjectURL(blob);
 
-        // 创建一个链接元素
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = this.Svgname; // 设置下载的文件名
+    // 创建一个链接元素
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = this.Svgname; // 设置下载的文件名
 
-        // 触发下载
-        document.body.appendChild(link);
-        link.click();
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
 
-        // 清理
-        URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-      });
-    },
+    // 清理
+    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+  });
+},
     // 鼠标移入（啥也没干）
     mouseover(event) {
       return;
