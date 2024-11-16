@@ -806,13 +806,15 @@ export default {
       // 如果是点击的组件，那么只有一个，就去掉颜色
       if (this.newSelectedModel.length===1) {
         const hrefID = this.newSelectedModel[0].getAttribute('xlink:href')
-        console.log('hrefID::: ', hrefID);
-        const selector = `defs>${hrefID.split(':').join('\/:')}>*`;
-        console.log(selector)
-        const elements = this.svgDoc.querySelectorAll(selector);
-        elements.forEach((element) => {
-          element.setAttribute("stroke", "");
-        });
+        const selector = hrefID.split("#")[1]
+        const symbolElement = this.svgDoc.getElementById(selector);
+        console.log(symbolElement)
+        if (symbolElement) {
+          const childElements = symbolElement.querySelectorAll('*');
+          childElements.forEach(element => {
+            element.removeAttribute('stroke');
+          });
+        }
         
       }
       // 修改组件的颜色，查看组件的symbol内默认颜色是否已经去掉，没有我就重新去一遍
@@ -925,7 +927,7 @@ export default {
           rect.setAttribute("transform", $use.getAttribute("transform"));
           rect.setAttribute("xlink:href", $use.getAttribute("xlink:href"));
           rect.setAttribute("pointer-events", "bounding-box");
-          rect.setAttribute("class", $use.getAttribute("class"));
+          // rect.setAttribute("class", $use.getAttribute("class"));
           // 给外层的use添加一个颜色，是方便后续看到好点击，导出的时候会把这个rect去掉
           rect.setAttribute("fill", "#bc1111a3");
           el.appendChild(rect);
