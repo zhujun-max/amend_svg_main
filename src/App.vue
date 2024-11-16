@@ -5,16 +5,16 @@
       <input type="file" accept=".svg" @change="handleFileUpload" ref="fileInput" style="display: none" />
       <!-- top -->
       <div class="top" v-if="!Preview">
-        <img src="./statc/xiugai.png" alt="一键修改"  :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu"/>
+        <img src="./statc/xiugai.png" alt="一键修改" :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu" />
         <button @click="triggerFileUpload()">导入</button>
         <button @click="copeSvg()" :disabled="!newSvgContent">导出</button>
         <button @click="PreviousStep()" :disabled="!svgRecordStack.length">回退至上一步</button>
       </div>
       <!-- left -->
       <div class="left">
-        <div @click="RemoveColor()" class="romColor" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview?'opacity: 0;cursor: none !important;':''">/</div>
+        <div @click="RemoveColor()" class="romColor" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;' : ''">/</div>
         <!-- <div class="jianch" @click="jiancha()">12</div> -->
-        <div class="yulan" @click="yulan()"  :disabled="!newSvgContent">{{ Preview ? "退出预览" : "预览模式" }}</div>
+        <div class="yulan" @click="yulan()" :disabled="!newSvgContent">{{ Preview ? "退出预览" : "预览模式" }}</div>
         <div v-if="Preview" class="div32">
           <div @click="hideSwitch()" :class="hideSwitchShow ? 'backRed' : ''">隐藏接口组件</div>
           <div @click="hideSwitchOther()" :class="hideSwitchOtherShow ? 'backRed' : ''">隐藏接口以外组件</div>
@@ -195,7 +195,7 @@ export default {
       colorShow: false,
       // 撤回的状态
       chehui: false,
-      setObj:{}
+      setObj: {}
     };
   },
   components: {
@@ -233,18 +233,17 @@ export default {
   methods: {
     // 六位随机数字
     generateSixDigitId() {
-      // 创建一个空字符串来存储生成的数字
-      let id = "";
-      // 循环6次，每次生成一个0-9之间的随机数字，并将其添加到id字符串中
-      for (let i = 0; i < 15; i++) {
-        // Math.random()生成一个0到1之间的浮点数
-        // 将其乘以10并取整得到一个0-9之间的随机整数
-        // 使用toString()确保数字被添加到字符串中
-        id += Math.floor(Math.random() * 10).toString();
+      // 创建一个字符数组，包含所有可能的字符（0-9, a-z, A-Z）
+      const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      let uuid = "";
+
+      // 循环32次，每次从字符数组中随机选择一个字符并添加到UUID中
+      for (let i = 0; i < 5; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        uuid += chars[randomIndex];
       }
 
-      // 返回生成的6位随机字符串
-      return id;
+      return uuid;
     },
     // 添加关联数据的方法
     addAssociation(id, data) {
@@ -261,7 +260,7 @@ export default {
       this.componentType.forEach((id) => {
         const correctRegex = /\:\^/;
         // 如果当前的id就是后续添加的，我就不用克隆了
-        if(correctRegex.test(id))return
+        if (correctRegex.test(id)) return;
         // 查找原始的symbol元素
         const symbol = this.svgDoc.getElementById(id);
         if (symbol) {
@@ -275,7 +274,7 @@ export default {
           newSymbol.setAttribute("id", nameId);
           console.log(nameId);
           // 将旧名称和新名称导入到关联表中
-          this.addAssociation(id,nameId)
+          this.addAssociation(id, nameId);
 
           // 创建一个临时的<defs>元素（如果svgContainer中没有的话）
           let defs = this.svgDoc.querySelector("defs");
@@ -292,18 +291,18 @@ export default {
       });
 
       this.$nextTick(() => {
-        this.componentType = this.componentLI()
+        this.componentType = this.componentLI();
       });
     },
     // 根据底部的id名来查找之前添加的有关联的id。
-    componentLI(){
-      const arrCom=JSON.parse(JSON.stringify(this.componentType))
-      this.componentType.forEach(v=>{
-        if(this.setObj[v]){
-          arrCom.push(...this.setObj[v])
+    componentLI() {
+      const arrCom = JSON.parse(JSON.stringify(this.componentType));
+      this.componentType.forEach((v) => {
+        if (this.setObj[v]) {
+          arrCom.push(...this.setObj[v]);
         }
-      })
-      return arrCom
+      });
+      return arrCom;
     },
     // 切换开关的状态（临时观看，不用保存状态，所以用jquery也无所谓）
     kaiguan() {
@@ -449,48 +448,48 @@ export default {
     },
     // 导出svg
     copeSvg() {
-  if (!this.newSvgContent) {
-    alert("请先导入svg文件");
-    return;
-  }
-  let newSvgContentDc = this.newSvgContent;
-  const parser = new DOMParser();
-  const svgDocD = parser.parseFromString(newSvgContentDc, "image/svg+xml");
-  // 如果有当前组件，就去掉之前添加红色块
-  const dollyBreakerLayer = svgDocD.getElementById("DollyBreaker_Layer");
-  if (dollyBreakerLayer) {
-    // 在dollyBreakerLayer上查找所有的rect元素
-    const rects = dollyBreakerLayer.querySelectorAll("rect");
-    rects.forEach((rectElement) => {
-      rectElement.parentNode.removeChild(rectElement);
-    });
+      if (!this.newSvgContent) {
+        alert("请先导入svg文件");
+        return;
+      }
+      let newSvgContentDc = this.newSvgContent;
+      const parser = new DOMParser();
+      const svgDocD = parser.parseFromString(newSvgContentDc, "image/svg+xml");
+      // 如果有当前组件，就去掉之前添加红色块
+      const dollyBreakerLayer = svgDocD.getElementById("DollyBreaker_Layer");
+      if (dollyBreakerLayer) {
+        // 在dollyBreakerLayer上查找所有的rect元素
+        const rects = dollyBreakerLayer.querySelectorAll("rect");
+        rects.forEach((rectElement) => {
+          rectElement.parentNode.removeChild(rectElement);
+        });
 
-    // 更新SVG内容
-    newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
-  }
-  this.$nextTick(() => {
-    // 创建一个Blob对象
-    const blob = new Blob([newSvgContentDc], {
-      type: "image/svg+xml;charset=utf-8"
-    });
+        // 更新SVG内容
+        newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
+      }
+      this.$nextTick(() => {
+        // 创建一个Blob对象
+        const blob = new Blob([newSvgContentDc], {
+          type: "image/svg+xml;charset=utf-8"
+        });
 
-    // 创建一个数据URL
-    const url = URL.createObjectURL(blob);
+        // 创建一个数据URL
+        const url = URL.createObjectURL(blob);
 
-    // 创建一个链接元素
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = this.Svgname; // 设置下载的文件名
+        // 创建一个链接元素
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = this.Svgname; // 设置下载的文件名
 
-    // 触发下载
-    document.body.appendChild(link);
-    link.click();
+        // 触发下载
+        document.body.appendChild(link);
+        link.click();
 
-    // 清理
-    URL.revokeObjectURL(url);
-    document.body.removeChild(link);
-  });
-},
+        // 清理
+        URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+      });
+    },
     // 鼠标移入（啥也没干）
     mouseover(event) {
       return;
@@ -536,7 +535,7 @@ export default {
                 }
               });
               this.componentType = arrUs;
-              this.componentType=this.componentLI()
+              this.componentType = this.componentLI();
               console.log("componentType::: ", this.componentType);
               this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
               console.log("componentIndex::: ", this.componentIndex);
@@ -1454,7 +1453,7 @@ body,
 .backRed {
   background: red;
 }
-[disabled="disabled"]{
+[disabled="disabled"] {
   opacity: 0.5;
   cursor: no-drop !important;
   pointer-events: none;
