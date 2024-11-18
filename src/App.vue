@@ -4,11 +4,13 @@
     <div class="content">
       <input type="file" accept=".svg" @change="handleFileUpload" ref="fileInput" style="display: none" />
       <!-- top -->
-      <div class="top" v-if="!Preview">
-        <img src="./statc/xiugai.png" alt="一键修改" :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu" />
-        <button @click="triggerFileUpload()">导入</button>
-        <button @click="copeSvg()" :disabled="!newSvgContent">导出</button>
-        <button @click="PreviousStep()" :disabled="!svgRecordStack.length">回退至上一步</button>
+      <div class="top">
+        <div class="topBox" v-if="!Preview">
+          <img src="./statc/xiugai.png" alt="一键修改" :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu" />
+          <button @click="triggerFileUpload()">导入</button>
+          <button @click="copeSvg()" :disabled="!newSvgContent">导出</button>
+          <button @click="PreviousStep()" :disabled="!svgRecordStack.length">回退至上一步</button>
+        </div>
       </div>
       <!-- left -->
       <div class="left">
@@ -22,6 +24,7 @@
           <div @click="jididaozha" v-if="jididaozhaShowD" :class="jididaozhaShow ? 'backRed' : ''">接地刀闸</div>
           <div @click="daozha" v-if="daozhaShowD" :class="daozhaShow ? 'backRed' : ''">刀闸</div>
         </div>
+        <img :src="require(`./statc/${videoShow ? 'video_play' : 'video'}.png`)" alt="视频修改" class="videoImg" title="视频添加" @click="videoCli()" />
       </div>
       <!-- right -->
       <div class="right"></div>
@@ -42,7 +45,7 @@
                 <div class="clordr" @click="dianji1({ color: none })">空</div>
               </div>
             </div>
-            <div class="addID" @click="addIDS">+</div>
+            <div class="addID" @click="addIDS" v-if="componentType.length">+</div>
           </div>
           <div class="ScaleRatioColumn">{{ Math.round(scale * 100) }}%</div>
         </div>
@@ -83,6 +86,7 @@ import SketchRule from "vue-sketch-ruler";
 export default {
   data() {
     return {
+      videoShow: false,
       palette: {
         bgColor: "rgba(225,225,255, 0)",
         longfgColor: "#bbb",
@@ -96,7 +100,9 @@ export default {
       newSvgContentCopy: {},
       Preview: false,
       originalText: "svgManualEncryption",
-      EncryptContent: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸", "词奱皶揪粚纱", "隵揑窾", "剅嚈仝", "寒桎仝"],
+      EncryptContent: ["厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸"],
+      // 不需要判断坐标的文字
+      textRem: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "词奱皶揪粚纱", "隵揑窾", "剅嚈仝", "寒桎仝"],
       hoveredIndex: null, // 跟踪悬停组件的索引
       newSvgContent: null,
       Svgname: "",
@@ -231,6 +237,9 @@ export default {
     }
   },
   methods: {
+    videoCli() {
+      this.videoShow = !this.videoShow;
+    },
     // 六位随机数字
     generateSixDigitId() {
       // 创建一个字符数组，包含所有可能的字符（0-9, a-z, A-Z）
@@ -503,7 +512,9 @@ export default {
       // 如果是拖拽，我就清除底部的组件id切换
       this.componentType = [];
       this.componentIndex = "";
-
+      // 先将点击的位置信息保存下来
+      const evenX = this.startX / this.scale;
+      const evenY = this.startY / this.scale;
       if (!this.selecFrame.isSelecting) {
         // 点击我就清除之前的所有数据
         this.handleRightClick();
@@ -511,6 +522,53 @@ export default {
       // 如果是点击的组件
       if (Math.trunc(this.selecFrame.selectionStyle.left.split("px")[0]) === Math.trunc(+this.selecFrame.selectionStyle.left.split("px")[0] + +this.selecFrame.selectionStyle.width.split("px")[0]) && Math.trunc(this.selecFrame.selectionStyle.top.split("px")[0]) === Math.trunc(+this.selecFrame.selectionStyle.top.split("px")[0] + +this.selecFrame.selectionStyle.height.split("px")[0])) {
         console.log("点击的同一个位置", event.target);
+
+        if (this.videoShow) {
+          let demo3 = prompt("请输入视频id：");
+          // 先判断用户输入的值
+          if (!demo3) return;
+          console.log("视频添加");
+          const svgNS = "http://www.w3.org/2000/svg";
+          let svgS = this.svgDoc.querySelector("svg");
+
+          // 检查是否存在 <g id="camera_Layer">
+          let cameraLayer = this.svgDoc.querySelector("#camera_Layer");
+          if (!cameraLayer) {
+            // 如果没有，则创建
+            cameraLayer = this.svgDoc.createElementNS(svgNS, "g");
+            cameraLayer.setAttribute("id", "camera_Layer");
+            svgS.appendChild(cameraLayer);
+          }
+
+          // 创建 <g id='imgBox' style='display:none' class="kv-1">
+          let imgBox = this.svgDoc.querySelector("#imgBox");
+          if (!imgBox) {
+            imgBox = this.svgDoc.createElementNS(svgNS, "g");
+            imgBox.setAttribute("style", "display:none");
+            imgBox.setAttribute("class", "kv-1");
+            cameraLayer.appendChild(imgBox);
+          }
+
+          // 清除之前的 <image> 元素（如果有）
+          imgBox.innerHTML = "";
+
+          // 创建 <image> 元素并设置属性
+          const image = this.svgDoc.createElementNS(svgNS, "image");
+          image.setAttribute("x", evenX - 25); // 减去一半宽度，使图片中心对齐点击点
+          image.setAttribute("y", evenY - 25); // 减去一半高度，使图片中心对齐点击点
+          image.setAttribute("width", "50");
+          image.setAttribute("height", "50");
+          image.setAttribute("xlink:href", "./image/sxt.png");
+          image.setAttribute("class", "myImageCk");
+          image.setAttribute("ids", demo3); // 可以动态设置这个属性
+
+          imgBox.appendChild(image);
+          this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+
+          console.log("demo3:", demo3);
+          return;
+        }
+
         const parser = new DOMParser();
         this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
         this.$forceUpdate();
@@ -804,19 +862,18 @@ export default {
         lineId.setAttribute("class", v.name);
       });
       // 如果是点击的组件，那么只有一个，就去掉颜色
-      if (this.newSelectedModel.length===1) {
-        const hrefID = this.newSelectedModel[0].getAttribute('xlink:href')
-        console.log('hrefID::: ', hrefID);
-        const selector = `defs>${hrefID.split(':').join('\/:')}>*`;
-        console.log(selector)
+      if (this.newSelectedModel.length === 1) {
+        const hrefID = this.newSelectedModel[0].getAttribute("xlink:href");
+        console.log("hrefID::: ", hrefID);
+        const selector = `defs>${hrefID.split(":").join("/:")}>*`;
+        console.log(selector);
         const elements = this.svgDoc.querySelectorAll(selector);
         elements.forEach((element) => {
           element.setAttribute("stroke", "");
         });
-        
       }
       // 修改组件的颜色，查看组件的symbol内默认颜色是否已经去掉，没有我就重新去一遍
-      
+
       this.selecFrame = this.$options.data().selecFrame;
       this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
       this.newSelectedLines = [];
@@ -843,6 +900,15 @@ export default {
       const elements1 = this.svgDoc.querySelectorAll("#Text_Layer>text");
       // 存储所有匹配到文本的y轴（用于删除没有匹配到的文本，根据当前y轴来判断）
       const textY = [];
+      // 删除文本。不用匹配坐标的
+      this.textRem.forEach((cc) => {
+        elements1.forEach((textElement) => {
+          if (textElement.textContent.trim().includes(cc)) {
+            if (!textElement.parentNode) return;
+            textElement.parentNode.removeChild(textElement);
+          }
+        });
+      });
       this.EncryptContent.forEach((cc) => {
         elements1.forEach((textElement) => {
           // 只要文本中包含该文字
@@ -1166,6 +1232,10 @@ export default {
     this.EncryptContent.forEach((v, index) => {
       this.EncryptContent[index] = this.xorEncryptDecrypt(v);
     });
+    this.textRem.forEach((v, index) => {
+      this.textRem[index] = this.xorEncryptDecrypt(v);
+    });
+    console.log(this.EncryptContent, this.textRem);
     // svg靠左上角对齐
     this.$refs.screensRef.scrollLeft = 0;
     this.$refs.screensRef.scrollTop = 0;
@@ -1211,22 +1281,28 @@ body,
     top: 0;
     left: 0;
     width: calc(100% - 140px);
-    padding: 0 70px;
     height: 30px;
-    display: flex;
-    align-items: center;
-    // box-shadow: 0px 10px 0px 8px #2f2f2c;
-    > button {
-      margin-left: 10px;
-      border: none;
-      background: transparent;
-      color: #fff;
-      cursor: pointer;
-    }
-    > img {
-      width: 22px;
-      height: 22px;
-      cursor: pointer;
+    padding: 0 70px;
+    .topBox {
+      top: 0;
+      left: 0;
+      width: calc(100% - 140px);
+      height: 30px;
+      display: flex;
+      align-items: center;
+      // box-shadow: 0px 10px 0px 8px #2f2f2c;
+      > button {
+        margin-left: 10px;
+        border: none;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+      }
+      > img {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+      }
     }
   }
   .left {
@@ -1412,6 +1488,12 @@ body,
   user-select: none;
   color: #fff;
 }
+.videoImg {
+  margin-top: 10px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
 .useCom {
   margin-left: 100px;
   display: flex;
@@ -1438,18 +1520,18 @@ body,
 .clordr {
   width: 24px;
   height: 24px;
-  border: 1px solid #2f2f2c;
+  border: 1px solid #ccc;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .use_clo {
   display: flex;
-  border: 1px solid #ccc;
+  // border: 1px solid #ccc;
 }
 .addID {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 1px solid #ccc;
   cursor: pointer;
 }
