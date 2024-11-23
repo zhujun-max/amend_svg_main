@@ -239,6 +239,24 @@ export default {
   methods: {
     videoCli() {
       this.videoShow = !this.videoShow;
+      let cameraLayer = this.svgDoc.querySelector("#camera_Layer");
+      if (this.videoShow) {
+        console.log("查询到有当前字段", cameraLayer);
+        // 查询是否有摄像头的图层，有就展开
+        if (cameraLayer) {
+          cameraLayer.setAttribute("style", "display:block");
+          // ??? 这里将所有的img标签的位置替换为本地图片位置
+        } else {
+          // 如果没有，则创建
+          cameraLayer = this.svgDoc.createElementNS(svgNS, "g");
+          cameraLayer.setAttribute("id", "camera_Layer");
+          svgS.appendChild(cameraLayer);
+        }
+      } else {
+        cameraLayer.setAttribute("style", "display:none");
+      }
+
+      this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
     },
     // 六位随机数字
     generateSixDigitId() {
@@ -476,6 +494,13 @@ export default {
         // 更新SVG内容
         newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
       }
+      // 如果有视频的图层
+      let cameraLayer = svgDocD.querySelector("#camera_Layer");
+      if (cameraLayer) {
+        cameraLayer.setAttribute("style", "display:none");
+        // 更新SVG内容
+        newSvgContentDc = new XMLSerializer().serializeToString(svgDocD);
+      }
       this.$nextTick(() => {
         // 创建一个Blob对象
         const blob = new Blob([newSvgContentDc], {
@@ -533,18 +558,10 @@ export default {
 
           // 检查是否存在 <g id="camera_Layer">
           let cameraLayer = this.svgDoc.querySelector("#camera_Layer");
-          if (!cameraLayer) {
-            // 如果没有，则创建
-            cameraLayer = this.svgDoc.createElementNS(svgNS, "g");
-            cameraLayer.setAttribute("id", "camera_Layer");
-            svgS.appendChild(cameraLayer);
-          }
-
           // 创建 <g id='imgBox' style='display:none' class="kv-1">
           let imgBox = this.svgDoc.querySelector("#imgBox");
           if (!imgBox) {
             imgBox = this.svgDoc.createElementNS(svgNS, "g");
-            imgBox.setAttribute("style", "display:none");
             imgBox.setAttribute("class", "kv-1");
             cameraLayer.appendChild(imgBox);
           }
@@ -862,18 +879,17 @@ export default {
         lineId.setAttribute("class", v.name);
       });
       // 如果是点击的组件，那么只有一个，就去掉颜色
-      if (this.newSelectedModel.length===1) {
-        const hrefID = this.newSelectedModel[0].getAttribute('xlink:href')
-        const selector = hrefID.split("#")[1]
+      if (this.newSelectedModel.length === 1) {
+        const hrefID = this.newSelectedModel[0].getAttribute("xlink:href");
+        const selector = hrefID.split("#")[1];
         const symbolElement = this.svgDoc.getElementById(selector);
-        console.log(symbolElement)
+        console.log(symbolElement);
         if (symbolElement) {
-          const childElements = symbolElement.querySelectorAll('*');
-          childElements.forEach(element => {
-            element.removeAttribute('stroke');
+          const childElements = symbolElement.querySelectorAll("*");
+          childElements.forEach((element) => {
+            element.removeAttribute("stroke");
           });
         }
-        
       }
       // 修改组件的颜色，查看组件的symbol内默认颜色是否已经去掉，没有我就重新去一遍
 
