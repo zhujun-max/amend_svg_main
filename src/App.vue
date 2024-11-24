@@ -24,7 +24,7 @@
           <div @click="jididaozha" v-if="jididaozhaShowD" :class="jididaozhaShow ? 'backRed' : ''">接地刀闸</div>
           <div @click="daozha" v-if="daozhaShowD" :class="daozhaShow ? 'backRed' : ''">刀闸</div>
         </div>
-        <img :src="require(`./statc/${videoShow ? 'video_play' : 'video'}.png`)" alt="视频修改" class="videoImg" title="视频添加" @click="videoCli()" />
+        <img v-if="!Preview" :src="require(`./statc/${videoShow ? 'video_play' : 'video'}.png`)" alt="视频修改" class="videoImg" title="视频添加" @click="videoCli()" />
       </div>
       <!-- right -->
       <div class="right"></div>
@@ -298,8 +298,10 @@ export default {
           // ??? 这里将所有的img标签的位置替换为本地图片位置
         } else {
           // 如果没有，则创建
+          const svgNS = "http://www.w3.org/2000/svg";
           cameraLayer = this.svgDoc.createElementNS(svgNS, "g");
           cameraLayer.setAttribute("id", "camera_Layer");
+          let svgS = this.svgDoc.querySelector("svg");
           svgS.appendChild(cameraLayer);
         }
       } else {
