@@ -38,14 +38,15 @@
           </div>
           <!-- 右边， 点击的组件的所有类型 -->
           <div class="useCom">
-            <div v-for="(v, i) in componentType" :key="v" :class="i === componentIndex ? 'selecCom' : ''">
-              <div class="use_co" @click="ModifyComponent(i)">{{ v.split(":")[1] }}</div>
-              <div class="use_clo" v-if="componentIndex === i">
+            <div v-for="(v, i) in componentType" :key="v" :class="v.substring(v.length-1)=='0'?'leftBorder':''">
+              <div class="use_co" @click="ModifyComponent(i)"  :class="i === componentIndex ? 'selecCom' : ''">{{ v.substring(v.length-1) }}</div>
+              <div class="rearbox" :style="'background:'+getRectFillColorById(v)" @click="showCol(i)"></div>
+              <div class="use_clo" v-if="selectIndex === i">
                 <div v-for="(item, i) in toolColor" :key="i" @click="dianji1(item)" :style="'background-color:' + item.color" class="clordr"></div>
-                <div class="clordr" @click="dianji1({ color: none })">空</div>
+                <div class="clordr" @click="dianji1({ color: 'none' })">空</div>
               </div>
             </div>
-            <div class="addID" @click="addIDS" v-if="componentType.length">+</div>
+            <div class="addID leftBorder" @click="addIDS" v-if="componentType.length">》</div>
           </div>
           <div class="ScaleRatioColumn">{{ Math.round(scale * 100) }}%</div>
         </div>
@@ -86,6 +87,7 @@ import SketchRule from "vue-sketch-ruler";
 export default {
   data() {
     return {
+      selectIndex:"",
       videoShow: false,
       palette: {
         bgColor: "rgba(225,225,255, 0)",
@@ -225,6 +227,11 @@ export default {
     }
   },
   watch: {
+    componentType: {
+      handler (ne, ol) { 
+        console.log('变化了',ne, ol)
+      }
+    },
     newSvgContent: {
       handler(ne, ol) {
         console.log('%c页面数据变动了','background:pink;')
@@ -245,6 +252,41 @@ export default {
   },
   
   methods: {
+    // 显示颜色组件
+    showCol (v) {
+      if (this.newSelectedModel.length === 1) {
+        if (this.selectIndex===v) {
+          this.selectIndex = ""
+        } else {
+          this.selectIndex = v;
+        }
+      }
+    },
+    // 根据当前组件名称获取rect的fil颜色
+    getRectFillColorById (id) {
+      // 获取<symbol>元素
+      const symbolElement = this.svgDoc.getElementById(id);
+      
+      // 检查<symbol>元素是否存在
+      if (!symbolElement) {
+        console.error(`Element with id '${id}' not found.`);
+        return null;
+      }
+      
+      // 查询<symbol>下的第一个<rect>元素
+      const rectElement = symbolElement.querySelector('rect');
+      
+      // 检查<rect>元素是否存在
+      if (!rectElement) {
+        console.error(`No <rect> element found within <symbol> with id '${id}'.`);
+        return null;
+      }
+      // 获取<rect>的fill属性值
+      const fillColor = rectElement.getAttribute('fill');
+      
+      // 返回fill属性值
+      return fillColor;
+    },
     videoCli() {
       this.videoShow = !this.videoShow;
       let cameraLayer = this.svgDoc.querySelector("#camera_Layer");
@@ -289,9 +331,10 @@ export default {
       // 将数据添加到与该id关联的数组中
       this.setObj[id].push(data);
     },
-    // 创建一个新的class，用于同一个组件，多个背景颜色情况。。。。。。。没实现
+    // 创建一个新的class，用于同一个组件，多个背景颜色情况
     addIDS() {
       console.log(this.symbol);
+      const UUID=this.generateSixDigitId()
       this.componentType.forEach((id) => {
         const correctRegex = /\:\^/;
         // 如果当前的id就是后续添加的，我就不用克隆了
@@ -304,7 +347,7 @@ export default {
 
           // 修改新symbol的ID
           let nameIdS = id.split(":");
-          nameIdS[1] = `^${this.generateSixDigitId()}^` + nameIdS[1];
+          nameIdS[1] = `^${UUID}^` + nameIdS[1];
           const nameId = nameIdS.join(":");
           newSymbol.setAttribute("id", nameId);
           console.log(nameId);
@@ -479,11 +522,16 @@ export default {
         this.$nextTick(() => {
           this.newSvgContent=this.newSvgContentCopy 
           this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
+          // 还原数据
           this.hideSwitchShow=false
           this.hideSwitchOtherShow=false
           this.kaiguanShow=false
           this.jididaozhaShow=false
-          this.daozhaShow=false
+          this.daozhaShow = false
+          this.componentType = []
+          this.componentIndex = ""
+          this.selectIndex = ""
+          
         })
       }
     },
@@ -736,8 +784,8 @@ export default {
     // 修改组件的xlink:href（类似切换开合状态）
     ModifyComponent(v) {
       if (this.newSelectedModel.length === 1) {
+        this.componentIndex=v
         this.newSelectedModel[0].setAttribute("xlink:href", "#" + this.componentType[v]);
-        this.componentIndex = v;
         this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
       }
     },
@@ -874,8 +922,8 @@ export default {
     // 修改组件默认颜色，（改组件填充色）
     dianji1(v) {
       if (this.newSelectedModel.length === 1) {
-        console.log(this.componentType[this.componentIndex]);
-        const symbol = this.svgDoc.getElementById(this.componentType[this.componentIndex]);
+        console.log(this.componentType[this.selectIndex]);
+        const symbol = this.svgDoc.getElementById(this.componentType[this.selectIndex]);
         if (symbol) {
           const rect = symbol.querySelector("rect");
           if (rect) {
@@ -1210,6 +1258,8 @@ export default {
           this.newSvgContent = e.target.result;
           this.svgRecordStack = [];
           this.$nextTick(() => {
+            // 清空之前的数据
+            this.componentType=[]
             const parser = new DOMParser();
             // 解析SVG字符串为DOM对象（切记：如果要修改dom，只能通过修改svgDoc来修改dom，还需要将svgDoc转为字符串=newSvgContent）
             this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
@@ -1535,14 +1585,21 @@ body,
   cursor: pointer;
 }
 .useCom {
-  margin-left: 100px;
+  margin-left: 50px;
   display: flex;
 }
 .useCom > div {
   display: flex;
-  margin-right: 15px;
+  margin-right: 12px;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+.leftBorder::before{
+    content: " ";
+    border-left: 2px solid #696969;
+    margin-right: 10px;
+    height: 40px;
 }
 .useCom .use_co {
   display: flex;
@@ -1551,6 +1608,14 @@ body,
   padding: 0 5px;
   height: 24px;
   border: 1px solid #ccc;
+  cursor: pointer;
+}
+.rearbox{
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 19px;
+  height: 19px;
+  margin-left: 2px;
   cursor: pointer;
 }
 .useCom .selecCom {
@@ -1567,13 +1632,28 @@ body,
 }
 .use_clo {
   display: flex;
-  // border: 1px solid #ccc;
+  position: absolute;
+  top: -45px;
+  border: 2px solid #ccc;
+}
+.use_clo::before {
+    position: absolute;
+    content: " ";
+    bottom: -12px;
+    left: calc(50% - 5px);
+    right: 0;
+    width: 0;
+    height: 0;
+    border: 0 solid transparent;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #ccc;
 }
 .addID {
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ccc;
-  cursor: pointer;
+    width: 24px;
+    cursor: pointer;
+    font-size: 23px;
+    margin-left: 8px;
 }
 .romColor {
   border: 1px solid #ccc;
