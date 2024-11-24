@@ -93,7 +93,7 @@ export default {
         borderColor: "#00000000",
         cornerActiveColor: "red"
       },
-      newSvgContentCopy: {},
+      newSvgContentCopy: "",
       Preview: false,
       originalText: "svgManualEncryption",
       EncryptContent: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸", "词奱皶揪粚纱", "隵揑窾", "剅嚈仝", "寒桎仝"],
@@ -221,6 +221,7 @@ export default {
   watch: {
     newSvgContent: {
       handler(ne, ol) {
+        console.log('%c页面数据变动了','background:pink;')
         if (this.chehui) {
           this.chehui = false;
         } else {
@@ -228,8 +229,15 @@ export default {
         }
       },
       deep: true
-    }
+    },
+    newSvgContentCopy: {
+      handler(ne, ol) {
+        console.log('%c拷贝的数据改变了','background:red;')
+      },
+      deep: true
+    },
   },
+  
   methods: {
     // 六位随机数字
     generateSixDigitId() {
@@ -428,15 +436,28 @@ export default {
       this.Preview = !this.Preview;
       if (this.Preview) {
         // 深克隆 SVG DOM（深度克隆包括所有子节点）
-        this.newSvgContentCopy = new XMLSerializer().serializeToString(this.$refs.containerRef.querySelector("svg").cloneNode(true));
+        this.newSvgContentCopy = new XMLSerializer().serializeToString(this.svgDoc.cloneNode(true));
         // 禁止svg框选。
         this.$refs.containerRef.style.pointerEvents = "none";
         // 关闭之前的框选弹窗
         this.handleRightClick();
       } else {
         // svg还原
-        this.newSvgContent = this.newSvgContentCopy;
+        // 多做这一步，时因为直接this.newSvgContent=this.newSvgContentCopy无法触发页面改变，不知道为啥，只能先将数据清空，然后重新赋值
+        this.newSvgContent = "";
+        const parser = new DOMParser();
+        this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
+        this.$forceUpdate()
         this.$refs.containerRef.style.pointerEvents = "all";
+        this.$nextTick(() => {
+          this.newSvgContent=this.newSvgContentCopy 
+          this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
+          this.hideSwitchShow=false
+          this.hideSwitchOtherShow=false
+          this.kaiguanShow=false
+          this.jididaozhaShow=false
+          this.daozhaShow=false
+        })
       }
     },
     // 回退至上一步
