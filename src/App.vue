@@ -38,9 +38,9 @@
           </div>
           <!-- 右边， 点击的组件的所有类型 -->
           <div class="useCom">
-            <div v-for="(v, i) in componentType" :key="v" :class="v.substring(v.length-1)=='0'?'leftBorder':''">
-              <div class="use_co" @click="ModifyComponent(i)"  :class="i === componentIndex ? 'selecCom' : ''">{{ v.substring(v.length-1) }}</div>
-              <div class="rearbox" :style="'background:'+getRectFillColorById(v)" @click="showCol(i)"></div>
+            <div v-for="(v, i) in componentType" :key="v" :class="v.substring(v.length - 1) == '0' ? 'leftBorder' : ''">
+              <div class="use_co" @click="ModifyComponent(i)" :class="i === componentIndex ? 'selecCom' : ''">{{ v.substring(v.length - 1) }}</div>
+              <div class="rearbox" :style="'background:' + getRectFillColorById(v)" @click="showCol(i)"></div>
               <div class="use_clo" v-if="selectIndex === i">
                 <div v-for="(item, i) in toolColor" :key="i" @click="dianji1(item)" :style="'background-color:' + item.color" class="clordr"></div>
                 <div class="clordr" @click="dianji1({ color: 'none' })">空</div>
@@ -87,7 +87,7 @@ import SketchRule from "vue-sketch-ruler";
 export default {
   data() {
     return {
-      selectIndex:"",
+      selectIndex: "",
       videoShow: false,
       palette: {
         bgColor: "rgba(225,225,255, 0)",
@@ -228,13 +228,13 @@ export default {
   },
   watch: {
     componentType: {
-      handler (ne, ol) { 
-        console.log('变化了',ne, ol)
+      handler(ne, ol) {
+        console.log("变化了", ne, ol);
       }
     },
     newSvgContent: {
       handler(ne, ol) {
-        console.log('%c页面数据变动了','background:pink;')
+        console.log("%c页面数据变动了", "background:pink;");
         if (this.chehui) {
           this.chehui = false;
         } else {
@@ -245,45 +245,50 @@ export default {
     },
     newSvgContentCopy: {
       handler(ne, ol) {
-        console.log('%c拷贝的数据改变了','background:red;')
+        console.log("%c拷贝的数据改变了", "background:red;");
       },
       deep: true
-    },
+    }
   },
-  
+
   methods: {
     // 显示颜色组件
-    showCol (v) {
+    showCol(v) {
       if (this.newSelectedModel.length === 1) {
-        if (this.selectIndex===v) {
-          this.selectIndex = ""
+        if (this.selectIndex === v) {
+          this.selectIndex = "";
         } else {
           this.selectIndex = v;
         }
       }
     },
     // 根据当前组件名称获取rect的fil颜色
-    getRectFillColorById (id) {
+    getRectFillColorById(id) {
       // 获取<symbol>元素
       const symbolElement = this.svgDoc.getElementById(id);
-      
+      let fillColor = "";
+
       // 检查<symbol>元素是否存在
       if (!symbolElement) {
         console.error(`Element with id '${id}' not found.`);
         return null;
       }
-      
+
       // 查询<symbol>下的第一个<rect>元素
-      const rectElement = symbolElement.querySelector('rect');
-      
-      // 检查<rect>元素是否存在
-      if (!rectElement) {
-        console.error(`No <rect> element found within <symbol> with id '${id}'.`);
+      const rectElement = symbolElement.querySelector("rect");
+      const lineElement = symbolElement.querySelector("line");
+      if (rectElement) {
+        // 获取<rect>的fill属性值
+        fillColor = rectElement.getAttribute("fill");
+      } else if (lineElement) {
+        // 获取<line>的stroke属性值
+        fillColor = lineElement.getAttribute("stroke");
+      } else {
+        console.error(`没有找到点击的元素下的rect元素'${id}'.`);
+        console.error(`没有找到点击的元素下的line元素'${id}'.`);
         return null;
       }
-      // 获取<rect>的fill属性值
-      const fillColor = rectElement.getAttribute('fill');
-      
+
       // 返回fill属性值
       return fillColor;
     },
@@ -336,7 +341,7 @@ export default {
     // 创建一个新的class，用于同一个组件，多个背景颜色情况
     addIDS() {
       console.log(this.symbol);
-      const UUID=this.generateSixDigitId()
+      const UUID = this.generateSixDigitId();
       this.componentType.forEach((id) => {
         const correctRegex = /\:\^/;
         // 如果当前的id就是后续添加的，我就不用克隆了
@@ -519,22 +524,21 @@ export default {
         this.newSvgContent = "";
         const parser = new DOMParser();
         this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
-        this.$forceUpdate()
+        this.$forceUpdate();
         this.$refs.containerRef.style.pointerEvents = "all";
         this.$nextTick(() => {
-          this.newSvgContent=this.newSvgContentCopy 
+          this.newSvgContent = this.newSvgContentCopy;
           this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
           // 还原数据
-          this.hideSwitchShow=false
-          this.hideSwitchOtherShow=false
-          this.kaiguanShow=false
-          this.jididaozhaShow=false
-          this.daozhaShow = false
-          this.componentType = []
-          this.componentIndex = ""
-          this.selectIndex = ""
-          
-        })
+          this.hideSwitchShow = false;
+          this.hideSwitchOtherShow = false;
+          this.kaiguanShow = false;
+          this.jididaozhaShow = false;
+          this.daozhaShow = false;
+          this.componentType = [];
+          this.componentIndex = "";
+          this.selectIndex = "";
+        });
       }
     },
     // 回退至上一步
@@ -786,7 +790,7 @@ export default {
     // 修改组件的xlink:href（类似切换开合状态）
     ModifyComponent(v) {
       if (this.newSelectedModel.length === 1) {
-        this.componentIndex=v
+        this.componentIndex = v;
         this.newSelectedModel[0].setAttribute("xlink:href", "#" + this.componentType[v]);
         this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
       }
@@ -928,10 +932,22 @@ export default {
         const symbol = this.svgDoc.getElementById(this.componentType[this.selectIndex]);
         if (symbol) {
           const rect = symbol.querySelector("rect");
+          const line = symbol.querySelector("line");
+          const circleAll = symbol.querySelectorAll("circle");
+          if (rect && line) {
+            alert('找到了两组组件元素，rect和lin。颜色都更改了')
+          }
           if (rect) {
             rect.setAttribute("fill", v.color);
-            this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+            }
+          if (line) {
+            line.setAttribute("stroke", v.color);
+            circleAll.forEach((v) => {
+              v.setAttribute("stroke", "");
+              
+            })
           }
+          this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
         } else {
           console.error("没有找到我需要的组件，不应该呀");
         }
@@ -1261,7 +1277,7 @@ export default {
           this.svgRecordStack = [];
           this.$nextTick(() => {
             // 清空之前的数据
-            this.componentType=[]
+            this.componentType = [];
             const parser = new DOMParser();
             // 解析SVG字符串为DOM对象（切记：如果要修改dom，只能通过修改svgDoc来修改dom，还需要将svgDoc转为字符串=newSvgContent）
             this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
@@ -1597,11 +1613,11 @@ body,
   justify-content: center;
   position: relative;
 }
-.leftBorder::before{
-    content: " ";
-    border-left: 2px solid #696969;
-    margin-right: 10px;
-    height: 40px;
+.leftBorder::before {
+  content: " ";
+  border-left: 2px solid #696969;
+  margin-right: 10px;
+  height: 40px;
 }
 .useCom .use_co {
   display: flex;
@@ -1612,7 +1628,7 @@ body,
   border: 1px solid #ccc;
   cursor: pointer;
 }
-.rearbox{
+.rearbox {
   border: 1px solid #ccc;
   border-radius: 50%;
   width: 19px;
@@ -1639,23 +1655,23 @@ body,
   border: 2px solid #ccc;
 }
 .use_clo::before {
-    position: absolute;
-    content: " ";
-    bottom: -12px;
-    left: calc(50% - 5px);
-    right: 0;
-    width: 0;
-    height: 0;
-    border: 0 solid transparent;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid #ccc;
+  position: absolute;
+  content: " ";
+  bottom: -12px;
+  left: calc(50% - 5px);
+  right: 0;
+  width: 0;
+  height: 0;
+  border: 0 solid transparent;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #ccc;
 }
 .addID {
-    width: 24px;
-    cursor: pointer;
-    font-size: 23px;
-    margin-left: 8px;
+  width: 24px;
+  cursor: pointer;
+  font-size: 23px;
+  margin-left: 8px;
 }
 .romColor {
   border: 1px solid #ccc;
