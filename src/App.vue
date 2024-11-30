@@ -14,7 +14,8 @@
       </div>
       <!-- left -->
       <div class="left">
-        <div @click="RemoveColor()" class="romColor" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;' : ''">/</div>
+        <div @click="RemoveColor()" class="romColor" title="去掉所有组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;' : ''">/</div>
+        <div @click="RemoveColor1()" class="romColor" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;margin-top:10px;' : 'margin-top:10px;'">/</div>
         <!-- <div class="jianch" @click="jiancha()">12</div> -->
         <div class="yulan" @click="yulan()" :disabled="!newSvgContent">{{ Preview ? "退出预览" : "预览模式" }}</div>
         <div v-if="Preview" class="div32">
@@ -39,6 +40,7 @@
           <!-- 右边， 点击的组件的所有类型 -->
           <div class="useCom">
             <div v-for="(v, i) in componentType" :key="v" :class="v.substring(v.length - 1) == '0' ? 'leftBorder' : ''">
+              <div :class="v" class="topTitel">{{ v.split(":")[1] }}</div>
               <div class="use_co" @click="ModifyComponent(i)" :class="i === componentIndex ? 'selecCom' : ''">{{ v.substring(v.length - 1) }}</div>
               <div class="rearbox" :style="'background:' + getRectFillColorById(v)" @click="showCol(i)"></div>
               <div class="use_clo" v-if="selectIndex === i">
@@ -340,7 +342,6 @@ export default {
     },
     // 创建一个新的class，用于同一个组件，多个背景颜色情况
     addIDS() {
-      console.log(this.symbol);
       const UUID = this.generateSixDigitId();
       this.componentType.forEach((id) => {
         const correctRegex = /\:\^/;
@@ -357,7 +358,6 @@ export default {
           nameIdS[1] = `^${UUID}^` + nameIdS[1];
           const nameId = nameIdS.join(":");
           newSymbol.setAttribute("id", nameId);
-          console.log(nameId);
           // 将旧名称和新名称导入到关联表中
           this.addAssociation(id, nameId);
 
@@ -371,10 +371,8 @@ export default {
           // 将新克隆的<symbol>添加到<defs>中
           defs.appendChild(newSymbol);
           this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
-          console.log("defs::: ", defs);
         }
       });
-
       this.$nextTick(() => {
         this.componentType = this.componentLI();
       });
@@ -935,17 +933,16 @@ export default {
           const line = symbol.querySelector("line");
           const circleAll = symbol.querySelectorAll("circle");
           if (rect && line) {
-            alert('找到了两组组件元素，rect和lin。颜色都更改了')
+            alert("找到了两组组件元素，rect和lin。颜色都更改了");
           }
           if (rect) {
             rect.setAttribute("fill", v.color);
-            }
+          }
           if (line) {
             line.setAttribute("stroke", v.color);
             circleAll.forEach((v) => {
               v.setAttribute("stroke", "");
-              
-            })
+            });
           }
           this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
         } else {
@@ -1113,12 +1110,14 @@ export default {
       // 7. 删除最底部的线条
       const bottomLine = this.svgDoc.querySelectorAll("line");
       const backHeight = this.svgDoc.querySelector("#Head_Layer>rect");
-      const Backhei = parseInt(backHeight.getAttribute("height"));
-      bottomLine.forEach((v) => {
-        if (Backhei - parseInt(v.getAttribute("y2")) < 40) {
-          v.parentNode.removeChild(v);
-        }
-      });
+      if (bottomLine && backHeight) {
+        const Backhei = parseInt(backHeight.getAttribute("height"));
+        bottomLine.forEach((v) => {
+          if (Backhei - parseInt(v.getAttribute("y2")) < 40) {
+            v.parentNode.removeChild(v);
+          }
+        });
+      }
 
       // 9. 删除右边的内容。右下角的点点点的。并加文本
       const GZPLayer = this.svgDoc.getElementById("GZP_Layer");
@@ -1149,26 +1148,28 @@ export default {
 
       // 10. 删除值班名单下的背景框
       const group = this.svgDoc.getElementById("Other_Layer");
-      // 先将39039作为匹配项
-      const aElement = group.querySelector('a[AFMask="39039"]:not([ChangePicPlane])');
-      if (aElement) {
-        const firstRect = aElement.querySelector("rect");
-        if (firstRect) {
-          firstRect.parentNode.removeChild(firstRect);
-        }
-      } else {
-        // 使用第二种方法
-        const aElement2 = group.querySelectorAll("a:not([ChangePicPlane])");
-        aElement2.forEach(function (va) {
-          const rect = va.querySelector("rect");
-          // 直接将颜色作为匹配项
-          if (rect.getAttribute("fill") === "rgb(0,85,0)") {
-            if (parseInt(rect.getAttribute("x"), 10) < 100) {
-              // 如果满足条件，则可以进行一些操作，比如改变其样式
-              rect.parentNode.removeChild(rect);
-            }
+      if (group) {
+        // 先将39039作为匹配项
+        const aElement = group.querySelector('a[AFMask="39039"]:not([ChangePicPlane])');
+        if (aElement) {
+          const firstRect = aElement.querySelector("rect");
+          if (firstRect) {
+            firstRect.parentNode.removeChild(firstRect);
           }
-        });
+        } else {
+          // 使用第二种方法
+          const aElement2 = group.querySelectorAll("a:not([ChangePicPlane])");
+          aElement2.forEach(function (va) {
+            const rect = va.querySelector("rect");
+            // 直接将颜色作为匹配项
+            if (rect.getAttribute("fill") === "rgb(0,85,0)") {
+              if (parseInt(rect.getAttribute("x"), 10) < 100) {
+                // 如果满足条件，则可以进行一些操作，比如改变其样式
+                rect.parentNode.removeChild(rect);
+              }
+            }
+          });
+        }
       }
 
       // 做完修改dom操作，一定要解析为字符串，好渲染到页面中
@@ -1198,6 +1199,49 @@ export default {
           });
         });
       } else {
+        elements5.forEach((element) => {
+          element.setAttribute("stroke", "");
+        });
+      }
+      // 做完修改dom操作，一定要解析为字符串，好渲染到页面中
+      this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
+    },
+    // 删除组件内的颜色（除开圆点图案）
+    RemoveColor1() {
+      const elements5 = this.svgDoc.querySelectorAll("defs>symbol>*");
+      const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
+      const PT_Layer = this.svgDoc.querySelectorAll("#PT_Layer>g>use");
+      const Arrester_Layer = this.svgDoc.querySelectorAll("#Arrester_Layer>g>use");
+      let circleName = [];
+      Protect_LayerUse.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
+      PT_Layer.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
+      Arrester_Layer.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
+
+      circleName = [...new Set(circleName)];
+      const circleNa = circleName.map((v) => {
+        v = v.split("#")[1];
+        return v;
+      });
+      if (circleNa.length) {
+        console.log("会走这里", circleNa.length);
+        circleNa.forEach((ecve) => {
+          elements5.forEach((element) => {
+            // 获取stroke属性的内容
+            if (ecve !== element.parentNode.getAttribute("id")) {
+              console.log("会走这里2222", element);
+              element.setAttribute("stroke", "");
+            }
+            // 点点点的默认组件颜色还不能删
+          });
+        });
+      } else {
+        console.log("会走这里111111111", elements5);
         elements5.forEach((element) => {
           element.setAttribute("stroke", "");
         });
@@ -1281,6 +1325,10 @@ export default {
             const parser = new DOMParser();
             // 解析SVG字符串为DOM对象（切记：如果要修改dom，只能通过修改svgDoc来修改dom，还需要将svgDoc转为字符串=newSvgContent）
             this.svgDoc = parser.parseFromString(this.newSvgContent, "image/svg+xml");
+            const SemanticCheck = parser.parseFromString(this.newSvgContent, "application/xml");
+            if (SemanticCheck.querySelector("parsererror")) {
+              alert('文件损坏，只可查看')
+            }
 
             // 以下操作，都不会修改元素
 
@@ -1605,6 +1653,16 @@ body,
 .useCom {
   margin-left: 50px;
   display: flex;
+}
+.topTitel{
+  position: absolute;
+  top: -8px;
+  font-size: 10px;
+}
+.leftBorder:not(ol)>.topTitel{
+  position: absolute;
+  top: -25px;
+  font-size: 10px;
 }
 .useCom > div {
   display: flex;
