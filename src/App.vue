@@ -10,6 +10,7 @@
           <button @click="triggerFileUpload()">导入</button>
           <button @click="copeSvg()" :disabled="!newSvgContent">导出</button>
           <button @click="PreviousStep()" :disabled="!svgRecordStack.length">回退至上一步</button>
+          <div class="bacRed" v-if="isShowA">有a标签</div>
         </div>
       </div>
       <!-- left -->
@@ -40,9 +41,9 @@
           <!-- 右边， 点击的组件的所有类型 -->
           <div class="useCom">
             <div v-for="(v, i) in componentType" :key="v" :class="v.substring(v.length - 1) == '0' ? 'leftBorder' : ''">
-              <div :class="v" class="topTitel">{{ v.split(":")[1] }}</div>
+              <!-- <div :class="v" class="topTitel">{{ v.split(":")[1] }}</div> -->
               <div class="use_co" @click="ModifyComponent(i)" :class="i === componentIndex ? 'selecCom' : ''">{{ v.substring(v.length - 1) }}</div>
-              <div class="rearbox" :style="'background:' + getRectFillColorById(v)" @click="showCol(i)"></div>
+              <div class="rearbox" :style="'background:' + getRectFillColorById(v)" @click="showCol(i)" :title="v"></div>
               <div class="use_clo" v-if="selectIndex === i">
                 <div v-for="(item, i) in toolColor" :key="i" @click="dianji1(item)" :style="'background-color:' + item.color" class="clordr"></div>
                 <div class="clordr" @click="dianji1({ color: 'none' })">空</div>
@@ -89,6 +90,7 @@ import SketchRule from "vue-sketch-ruler";
 export default {
   data() {
     return {
+      isShowA:false,
       selectIndex: "",
       videoShow: false,
       palette: {
@@ -205,7 +207,6 @@ export default {
       colorShow: false,
       // 撤回的状态
       chehui: false,
-      setObj: {}
     };
   },
   components: {
@@ -241,6 +242,22 @@ export default {
           this.chehui = false;
         } else {
           this.svgRecordStack.push(ol);
+          // 每次修改完后，查找是否还有a标签。
+          let numS = 0
+          console.log('找不到吗', this.svgDoc)
+          // 第一次导入可能还找不到svgDoc
+          if(!this.svgDoc) return 
+            const hrefSkip = this.svgDoc.querySelectorAll("a");
+            hrefSkip.forEach((v) => {
+              if (v.getAttribute("xlink:href")) {
+                numS+=1
+              }
+            });
+            if (numS) {
+                  this.isShowA = true
+            } else {
+                  this.isShowA = false
+            }
         }
       },
       deep: true
@@ -331,15 +348,6 @@ export default {
 
       return uuid;
     },
-    // 添加关联数据的方法
-    addAssociation(id, data) {
-      // 如果id不存在于关联对象中，先创建它并初始化为空数组
-      if (!(id in this.setObj)) {
-        this.setObj[id] = [];
-      }
-      // 将数据添加到与该id关联的数组中
-      this.setObj[id].push(data);
-    },
     // 创建一个新的class，用于同一个组件，多个背景颜色情况
     addIDS() {
       const UUID = this.generateSixDigitId();
@@ -359,7 +367,7 @@ export default {
           const nameId = nameIdS.join(":");
           newSymbol.setAttribute("id", nameId);
           // 将旧名称和新名称导入到关联表中
-          this.addAssociation(id, nameId);
+          // this.addAssociation(id, nameId);
 
           // 创建一个临时的<defs>元素（如果svgContainer中没有的话）
           let defs = this.svgDoc.querySelector("defs");
@@ -377,15 +385,81 @@ export default {
         this.componentType = this.componentLI();
       });
     },
-    // 根据底部的id名来查找之前添加的有关联的id。
-    componentLI() {
-      const arrCom = JSON.parse(JSON.stringify(this.componentType));
-      this.componentType.forEach((v) => {
-        if (this.setObj[v]) {
-          arrCom.push(...this.setObj[v]);
+    // 传入一个id名，将所有的相同的id全部以数组形式返回，没传我就用之前的componentType
+    componentLI (v) {
+      console.log('传入的isss',v)
+      // 1. 将需要复制的id单独取出来。
+      // 匹配如果有^。就表示是我后续添加的
+      const correctRegex = /\:\^/;
+      // 匹配最后一位是数字，倒数第二位是下划线
+      const regex = /^.*?_.$/;
+      // 获取所有的id信息
+      const aleaArr=[]
+        const defsArr = this.svgDoc.querySelectorAll("defs symbol")
+            // 遍历数组中的每个字符串
+        for (let i = 0; i < defsArr.length; i++) {
+            // 如果某个字符串不满足条件，则返回false
+          if (regex.test(defsArr[i].getAttribute("id"))) {
+            aleaArr.push(defsArr[i].getAttribute("id"))
+          }
+      }
+      let allID = []
+      // 查找所有的
+      if (v) {
+        console.log('依据', v)
+        let value = ""
+        // 传入的id可能也是后续添加的
+        if (correctRegex.test(v) ) {
+          value=v.replace(/\^.*?\^/, '').slice(1, -1).trim()
+        } else {
+          value=v.slice(1, -1)
         }
-      });
-      return arrCom;
+        
+        console.log('修改后的依据',value)
+        // 根据传入的id去查找所有的数据
+        allID=aleaArr.filter(item => {
+          if (item.includes('^')) {
+              // 移除^及其之间的内容，再移除最后一个字符
+            if (item.replace(/\^.*?\^/, '').slice(0, -1).trim()===value) {
+                console.log('找到的1', v)
+                return item
+              }
+          } else {
+              // 直接移除最后一个字符
+            if (item.slice(0, -1).trim()===value) {
+                console.log('找到的', v)
+                return item
+              }
+          }
+        })
+        console.log('最后的数据',allID)
+        return allID
+      } else {
+        // 1. 先将需要复制的id取出来，只有一个
+        const arleada = this.componentType.filter((va) => {
+          // 没有^,代表不是我后续添加的 && 没有异常的id，避免创建异常的id
+          if (!correctRegex.test(va) && regex.test(va)) return va
+        })
+        console.log(arleada[0].slice(0, -1))
+        const letAv=arleada[0].slice(0, -1)
+        allID=aleaArr.filter((item) => {
+           if (item.includes('^')) {
+              // 移除^及其之间的内容，再移除最后一个字符
+            if (item.replace(/\^.*?\^/, '').slice(0, -1).trim()===letAv) {
+                console.log('找到的1', v)
+                return item
+              }
+          } else {
+              // 直接移除最后一个字符
+            if (item.slice(0, -1).trim()===letAv) {
+                console.log('找到的', v)
+                return item
+              }
+          }
+        })
+        console.log('最后的数据',allID)
+        return allID
+      }
     },
     // 切换开关的状态（临时观看，不用保存状态，所以用jquery也无所谓）
     kaiguan() {
@@ -620,6 +694,7 @@ export default {
       // 如果是点击的组件
       if (Math.trunc(this.selecFrame.selectionStyle.left.split("px")[0]) === Math.trunc(+this.selecFrame.selectionStyle.left.split("px")[0] + +this.selecFrame.selectionStyle.width.split("px")[0]) && Math.trunc(this.selecFrame.selectionStyle.top.split("px")[0]) === Math.trunc(+this.selecFrame.selectionStyle.top.split("px")[0] + +this.selecFrame.selectionStyle.height.split("px")[0])) {
         console.log("点击的同一个位置", event.target);
+        console.log('点击的坐标: x',evenX," Y:",evenY)
 
         if (this.videoShow) {
           let demo3 = prompt("请输入视频id：");
@@ -675,17 +750,10 @@ export default {
             if (event.target.tagName === "use") {
               const targetUseElement = Array.from(parentElement.querySelectorAll("use")).find((el) => el.getAttribute("xlink:href") === xlinkHref);
               const href = targetUseElement.getAttribute("xlink:href");
-              const hrefSlice = href.slice(1, -1);
               const arrUs = [];
-              this.symbol.forEach((v) => {
-                if (v.includes(hrefSlice)) {
-                  arrUs.push(v);
-                }
-              });
-              this.componentType = arrUs;
-              this.componentType = this.componentLI();
+              this.componentType = this.componentLI(href);
               console.log("componentType::: ", this.componentType);
-              this.componentIndex = arrUs.findIndex((v) => v === href.slice(1));
+              this.componentIndex = this.componentType.findIndex((v) => v === href.slice(1));
               console.log("componentIndex::: ", this.componentIndex);
               this.newSelectedModel = [targetUseElement];
             }
@@ -1229,19 +1297,16 @@ export default {
         return v;
       });
       if (circleNa.length) {
-        console.log("会走这里", circleNa.length);
         circleNa.forEach((ecve) => {
           elements5.forEach((element) => {
             // 获取stroke属性的内容
             if (ecve !== element.parentNode.getAttribute("id")) {
-              console.log("会走这里2222", element);
               element.setAttribute("stroke", "");
             }
             // 点点点的默认组件颜色还不能删
           });
         });
       } else {
-        console.log("会走这里111111111", elements5);
         elements5.forEach((element) => {
           element.setAttribute("stroke", "");
         });
@@ -1329,6 +1394,31 @@ export default {
             if (SemanticCheck.querySelector("parsererror")) {
               alert('文件损坏，只可查看')
             }
+
+            // 判断文件symbol的id名是否有问题
+            const regex = /^.*?_.$/;
+            const defsArr = this.svgDoc.querySelectorAll("defs symbol")
+            const aleaArr=[]
+               // 遍历数组中的每个字符串
+            for (let i = 0; i < defsArr.length; i++) {
+                // 如果某个字符串不满足条件，则返回false
+              if (!regex.test(defsArr[i].getAttribute("id"))) {
+                aleaArr.push(defsArr[i].getAttribute("id"))
+              }
+            }
+            // 张家口地市有会有一个id。排除掉
+            if (!(aleaArr.length===1 && aleaArr[0]==='terminal')) {
+              alert(`ID有问题,请检查:::::  ${aleaArr.join(',')}`)
+            }
+
+            // 检查是否有a标签,并且a标签是否可以跳转
+            const hrefSkip = this.svgDoc.querySelectorAll("a");
+             console.log('有吗',hrefSkip)
+              hrefSkip.forEach((v) => {
+                if (v.getAttribute("xlink:href")) {
+                  this.isShowA = true
+                }
+              });
 
             // 以下操作，都不会修改元素
 
@@ -1458,6 +1548,15 @@ body,
         width: 22px;
         height: 22px;
         cursor: pointer;
+      }
+      .bacRed{
+          width: 200px;
+          height: 80%;
+          font-size: 18px;
+          margin-left: 50px;
+          background: red;
+          color: #fff;
+          text-align: center;
       }
     }
   }
