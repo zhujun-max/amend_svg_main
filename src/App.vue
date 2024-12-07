@@ -16,7 +16,7 @@
       <!-- left -->
       <div class="left">
         <div @click="RemoveColor()" class="romColor" title="去掉所有组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;' : ''">/</div>
-        <div @click="RemoveColor1()" class="romColor" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;margin-top:10px;' : 'margin-top:10px;'">/</div>
+        <div @click="RemoveColor1()" class="romColor topback" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;margin-top:10px;' : 'margin-top:10px;'">/</div>
         <!-- <div class="jianch" @click="jiancha()">12</div> -->
         <div class="yulan" @click="yulan()" :disabled="!newSvgContent">{{ Preview ? "退出预览" : "预览模式" }}</div>
         <div v-if="Preview" class="div32">
@@ -1245,7 +1245,7 @@ export default {
     },
     // 删除组件内的颜色（除开圆点图案）
     RemoveColor() {
-      const elements5 = this.svgDoc.querySelectorAll("defs>symbol>*");
+      const elements5 = this.svgDoc.querySelectorAll("defs>symbol");
       const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
       let circleName = [];
       Protect_LayerUse.forEach((v) => {
@@ -1257,15 +1257,15 @@ export default {
         return v;
       });
       if (circleNa.length) {
-        circleNa.forEach((ecve) => {
           elements5.forEach((element) => {
-            // 获取stroke属性的内容
-            if (ecve !== element.parentNode.getAttribute("id")) {
-              element.setAttribute("stroke", "");
+            if (!circleNa.includes(element.getAttribute("id"))) {
+              Array.from(element.children).forEach((child) => {
+                child.setAttribute('stroke', '');
+              });
+            } else {
+              console.log('保留颜色的组件',element.getAttribute("id"))
             }
-            // 点点点的默认组件颜色还不能删
           });
-        });
       } else {
         elements5.forEach((element) => {
           element.setAttribute("stroke", "");
@@ -1276,10 +1276,13 @@ export default {
     },
     // 删除组件内的颜色（除开圆点图案）
     RemoveColor1() {
-      const elements5 = this.svgDoc.querySelectorAll("defs>symbol>*");
+      const elements5 = this.svgDoc.querySelectorAll("defs>symbol");
       const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
       const PT_Layer = this.svgDoc.querySelectorAll("#PT_Layer>g>use");
       const Arrester_Layer = this.svgDoc.querySelectorAll("#Arrester_Layer>g>use");
+      const Ascoil_Layer = this.svgDoc.querySelectorAll("#Ascoil_Layer>g>use");
+      const Term_Layer = this.svgDoc.querySelectorAll("#Term_Layer>g>use");
+      const Transformer2_Layer = this.svgDoc.querySelectorAll("#Transformer2_Layer>g>use");
       let circleName = [];
       Protect_LayerUse.forEach((v) => {
         circleName.push(v.getAttribute("xlink:href"));
@@ -1290,6 +1293,15 @@ export default {
       Arrester_Layer.forEach((v) => {
         circleName.push(v.getAttribute("xlink:href"));
       });
+      Ascoil_Layer.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
+      Term_Layer.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
+      Transformer2_Layer.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
 
       circleName = [...new Set(circleName)];
       const circleNa = circleName.map((v) => {
@@ -1297,14 +1309,14 @@ export default {
         return v;
       });
       if (circleNa.length) {
-        circleNa.forEach((ecve) => {
-          elements5.forEach((element) => {
-            // 获取stroke属性的内容
-            if (ecve !== element.parentNode.getAttribute("id")) {
-              element.setAttribute("stroke", "");
+        elements5.forEach((element) => {
+            if (!circleNa.includes(element.getAttribute("id"))) {
+              Array.from(element.children).forEach((child) => {
+                child.setAttribute('stroke', '');
+              });
+            } else {
+              console.log('保留颜色的组件',element.getAttribute("id"))
             }
-            // 点点点的默认组件颜色还不能删
-          });
         });
       } else {
         elements5.forEach((element) => {
@@ -1841,6 +1853,9 @@ body,
   color: #ffffff;
   font-size: 15px;
   cursor: pointer;
+}
+.topback{
+  background: linear-gradient(to bottom, rgba(0, 128, 0, 0) 0%, rgb(255 255 255 / 0%) 30%, rgb(255 0 0) 33%, rgb(255 0 0) 80%) 100% !important;
 }
 .backRed {
   background: red;
