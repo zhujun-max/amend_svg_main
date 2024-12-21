@@ -106,9 +106,9 @@ export default {
       newSvgContentCopy: "",
       Preview: false,
       originalText: "svgManualEncryption",
-      EncryptContent: ["厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "偏玛呪匘", "隵揑駱頸"],
+      EncryptContent: ["厫畃窾乶頔", "儺嬡爫絯彴嚐", "仿歗缶纑纲柪", "仗皂洦粶纾", "收雪弲沯", "仸亀剰蠥", "昉肋耳勥", "坛绉皶見", "焔晸揀剻", "勛珙皶揪", "寺儞陕匦", "添附皶見", "卉垩畏畸赾茙", "寭阳杮勒恚勎", "隵揑駱頸"],
       // 不需要判断坐标的文字
-      textRem: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "词奱皶揪粚纱", "隵揑窾", "剅嚈仝", "寒桎仝"],
+      textRem: ["嚎缧凧博禇盩峮隧揋窜诐奤皣覿粋纫", "词奱皶揪粚纱", "隵揑窾", "剅嚈仝", "寒桎仝","偏玛呪匘"],
       hoveredIndex: null, // 跟踪悬停组件的索引
       newSvgContent: null,
       Svgname: "",
@@ -244,7 +244,6 @@ export default {
           this.svgRecordStack.push(ol);
           // 每次修改完后，查找是否还有a标签。
           let numS = 0
-          console.log('找不到吗', this.svgDoc)
           // 第一次导入可能还找不到svgDoc
           if(!this.svgDoc) return 
             const hrefSkip = this.svgDoc.querySelectorAll("a");
@@ -1093,14 +1092,17 @@ export default {
         });
       });
       const contrastResult = this.contrast(textY);
-      // 第二次匹配，将删除的坐标轴附近的参数，也删除
-      elements1.forEach((cy) => {
+      // 如果匹配到的坐标轴不能少于5个，就不执行，因为可能不精准
+      if (textY.length>5) {
+        // 第二次匹配，将删除的坐标轴附近的参数，也删除
+        elements1.forEach((cy) => {
         // 如果已经被删除，就跳过
         if (!cy.parentNode) return;
         if (this.contrastArr(cy.getAttribute("y"), contrastResult, 7)) {
           cy.parentNode.removeChild(cy);
         }
       });
+    }
 
       // 2.删除所有图片标签
       const elements2 = this.svgDoc.querySelectorAll("#Other_Layer>image");
