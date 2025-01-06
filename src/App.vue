@@ -1096,13 +1096,13 @@ export default {
       if (textY.length>5) {
         // 第二次匹配，将删除的坐标轴附近的参数，也删除
         elements1.forEach((cy) => {
-        // 如果已经被删除，就跳过
-        if (!cy.parentNode) return;
-        if (this.contrastArr(cy.getAttribute("y"), contrastResult, 7)) {
-          cy.parentNode.removeChild(cy);
-        }
-      });
-    }
+          // 如果已经被删除，就跳过
+          if (!cy.parentNode) return;
+          if (this.contrastArr(cy.getAttribute("y"), contrastResult, 7)) {
+            cy.parentNode.removeChild(cy);
+          }
+        });
+      }
 
       // 2.删除所有图片标签
       const elements2 = this.svgDoc.querySelectorAll("#Other_Layer>image");
@@ -1392,8 +1392,8 @@ export default {
       const file = event.target.files[0];
       if (file && file.type === "image/svg+xml") {
         const reader = new FileReader();
-        // 报名文件名，用于下载
-        this.Svgname = this.repName(file.name);
+        // 文件名，用于下载
+        this.Svgname = file.name
         reader.onload = (e) => {
           // svg，在页面使用v-html渲染。（切记：不能直接通过获取dom来修改元素，不然状态保持不住）
           this.newSvgContent = e.target.result;
