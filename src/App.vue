@@ -302,8 +302,6 @@ export default {
         // 获取<line>的stroke属性值
         fillColor = lineElement.getAttribute("stroke");
       } else {
-        console.error(`没有找到点击的元素下的rect元素'${id}'.`);
-        console.error(`没有找到点击的元素下的line元素'${id}'.`);
         return null;
       }
 
@@ -693,6 +691,7 @@ export default {
       // 如果是点击的组件
       if (Math.trunc(this.selecFrame.selectionStyle.left.split("px")[0]) === Math.trunc(+this.selecFrame.selectionStyle.left.split("px")[0] + +this.selecFrame.selectionStyle.width.split("px")[0]) && Math.trunc(this.selecFrame.selectionStyle.top.split("px")[0]) === Math.trunc(+this.selecFrame.selectionStyle.top.split("px")[0] + +this.selecFrame.selectionStyle.height.split("px")[0])) {
         console.log("点击的同一个位置", event.target);
+        console.log("父级id", event.target.parentNode.parentNode.parentNode.getAttribute('id'));
         console.log('点击的坐标: x',evenX," Y:",evenY)
 
         if (this.videoShow) {
@@ -745,8 +744,12 @@ export default {
           if (parentElement) {
             const xlinkHref = targetElement.getAttribute("xlink:href");
             console.log("id名", xlinkHref);
-
-            if (event.target.tagName === "use") {
+            // 如果是点击的三色组件，双色组件（就是变压器）
+            if (targetElement.parentNode.parentNode && ['Transformer2_Layer','Transformer3_Layer'].includes(targetElement.parentNode.parentNode.parentNode.getAttribute('id'))) {
+              console.log('变压器，', targetElement)
+              this.newSelectedModel=[targetElement]
+            }else if (targetElement.tagName === "use") {
+              // 如果是点击的组件
               const targetUseElement = Array.from(parentElement.querySelectorAll("use")).find((el) => el.getAttribute("xlink:href") === xlinkHref);
               const href = targetUseElement.getAttribute("xlink:href");
               const arrUs = [];
@@ -755,8 +758,9 @@ export default {
               this.componentIndex = this.componentType.findIndex((v) => v === href.slice(1));
               console.log("componentIndex::: ", this.componentIndex);
               this.newSelectedModel = [targetUseElement];
-            }
-            if (event.target.tagName === "rect" && event.target.getAttribute("xlink:href")) {
+              console.log("targetUseElement::: ", targetUseElement);
+            }else if (targetElement.tagName === "rect" && targetElement.getAttribute("xlink:href")) {
+              // 如果点击的我创建的红色块
               const elementsWithId = this.svgDoc.querySelectorAll(`[id="${parentId}"]`);
               console.log(elementsWithId);
               console.log("id:", parentId);
@@ -1043,7 +1047,6 @@ export default {
         }
       }
       // 修改组件的颜色，查看组件的symbol内默认颜色是否已经去掉，没有我就重新去一遍
-
       this.selecFrame = this.$options.data().selecFrame;
       this.newSvgContent = new XMLSerializer().serializeToString(this.svgDoc);
       this.newSelectedLines = [];
