@@ -6,8 +6,8 @@
       <!-- top -->
       <div class="top">
         <div class="topBox" v-if="!Preview">
-          <img src="./statc/xiugai.png" alt="一键修改" :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu" />
-          <button @click="triggerFileUpload()">导入</button>
+          <img src="./statc/xiugai.png" alt="一键修改" :disabled="!newSvgContent" title="一键修改" @click="basics()" class="basicsXiu" id="v-step-2"/>
+          <button @click="triggerFileUpload()" id="v-step-1">导入</button>
           <button @click="copeSvg()" :disabled="!newSvgContent">导出</button>
           <button @click="PreviousStep()" :disabled="!svgRecordStack.length">回退至上一步</button>
           <div class="bacRed" v-if="isShowA">有a标签</div>
@@ -15,10 +15,10 @@
       </div>
       <!-- left -->
       <div class="left">
-        <div @click="RemoveColor()" class="romColor" title="去掉所有组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;' : ''">/</div>
-        <div @click="RemoveColor1()" class="romColor topback" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;margin-top:10px;' : 'margin-top:10px;'">/</div>
+        <div @click="RemoveColor()" class="romColor" id="v-step-3" title="去掉所有组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;' : ''">/</div>
+        <div @click="RemoveColor1()" class="romColor topback" id="v-step-4" title="去掉组件默认颜色" :disabled="!newSvgContent" :style="Preview ? 'opacity: 0;cursor: none !important;margin-top:10px;' : 'margin-top:10px;'">/</div>
         <!-- <div class="jianch" @click="jiancha()">12</div> -->
-        <div class="yulan" @click="yulan()" :disabled="!newSvgContent">{{ Preview ? "退出预览" : "预览模式" }}</div>
+        <div class="yulan" @click="yulan()" :disabled="!newSvgContent" id="v-step-5">{{ Preview ? "退出预览" : "预览模式" }}</div>
         <div v-if="Preview" class="div32">
           <div @click="hideSwitch()" :class="hideSwitchShow ? 'backRed' : ''">隐藏接口组件</div>
           <div @click="hideSwitchOther()" :class="hideSwitchOtherShow ? 'backRed' : ''">隐藏接口以外组件</div>
@@ -26,7 +26,7 @@
           <div @click="jididaozha" v-if="jididaozhaShowD" :class="jididaozhaShow ? 'backRed' : ''">接地刀闸</div>
           <div @click="daozha" v-if="daozhaShowD" :class="daozhaShow ? 'backRed' : ''">刀闸</div>
         </div>
-        <img v-if="!Preview" :src="require(`./statc/${videoShow ? 'video_play' : 'video'}.png`)" alt="视频修改" class="videoImg" title="视频添加" @click="videoCli()" />
+        <img v-if="!Preview" id="v-step-6" :src="require(`./statc/${videoShow ? 'video_play' : 'video'}.png`)" alt="视频修改" class="videoImg" title="视频添加" @click="videoCli()" />
       </div>
       <!-- right -->
       <div class="right"></div>
@@ -82,6 +82,8 @@
         </div>
       </div>
     </div>
+    <!-- 新手指引 -->
+    <v-tour name="myTour" :steps="steps"></v-tour>
   </div>
 </template>
 
@@ -90,6 +92,32 @@ import SketchRule from "vue-sketch-ruler";
 export default {
   data() {
     return {
+      steps: [
+        {
+          target: '#v-step-1',
+          content: '导入数据'
+        },
+        {
+          target: '#v-step-2',
+          content: '一键修改'
+        },
+        {
+          target: '#v-step-3',
+          content: '去掉所有颜色'
+        },
+        {
+          target: '#v-step-4',
+          content: '去掉组件的颜色'
+        },
+        {
+          target: '#v-step-5',
+          content: '预览模式'
+        },
+        {
+          target: '#v-step-6',
+          content: '摄像头一键添加'
+        },
+      ],
       isShowA:false,
       selectIndex: "",
       videoShow: false,
@@ -1251,7 +1279,13 @@ export default {
     // 删除组件内的颜色（除开圆点图案）
     RemoveColor() {
       const elements5 = this.svgDoc.querySelectorAll("defs>symbol");
-      const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
+      let Protect_LayerUse = [];
+      if (this.svgDoc.querySelectorAll("#Protect_Layer>g>use") && this.svgDoc.querySelectorAll("#Protect_Layer>g>use").length) {
+        Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
+      } else if
+      (this.svgDoc.querySelectorAll("#Status_Layer>g>use") && this.svgDoc.querySelectorAll("#Status_Layer>g>use").length) {
+        Protect_LayerUse = this.svgDoc.querySelectorAll("#Status_Layer>g>use");
+      }
       let circleName = [];
       Protect_LayerUse.forEach((v) => {
         circleName.push(v.getAttribute("xlink:href"));
@@ -1283,6 +1317,7 @@ export default {
     RemoveColor1() {
       const elements5 = this.svgDoc.querySelectorAll("defs>symbol");
       const Protect_LayerUse = this.svgDoc.querySelectorAll("#Protect_Layer>g>use");
+      const Status_Layer = this.svgDoc.querySelectorAll("#Status_Layer>g>use");
       const PT_Layer = this.svgDoc.querySelectorAll("#PT_Layer>g>use");
       const Arrester_Layer = this.svgDoc.querySelectorAll("#Arrester_Layer>g>use");
       const Ascoil_Layer = this.svgDoc.querySelectorAll("#Ascoil_Layer>g>use");
@@ -1290,6 +1325,9 @@ export default {
       const Transformer2_Layer = this.svgDoc.querySelectorAll("#Transformer2_Layer>g>use");
       let circleName = [];
       Protect_LayerUse.forEach((v) => {
+        circleName.push(v.getAttribute("xlink:href"));
+      });
+      Status_Layer.forEach((v) => {
         circleName.push(v.getAttribute("xlink:href"));
       });
       PT_Layer.forEach((v) => {
@@ -1506,6 +1544,7 @@ export default {
     this.$nextTick(() => {
       this.initSize();
     });
+    this.$tours['myTour'].start()
   },
   beforeDestroy() {
     // 组件销毁前移除 resize 事件监听器
