@@ -1482,6 +1482,14 @@ export default {
             if (svg) {
               this.svgWidth = svg.getAttribute("width");
               this.svgHeight = svg.getAttribute("height");
+              // 如果获取不到svg的宽高，就获取Head_Layer的宽高
+              if (!this.svgWidth || !this.svgHeight) {
+                const viewBox = this.svgDoc.querySelector("svg>#Head_Layer>rect")
+                if (viewBox) {
+                  this.svgWidth = viewBox.getAttribute("width");
+                  this.svgHeight = viewBox.getAttribute("height");
+                }
+              }
               this.svgScaleWidth = this.svgWidth * this.scale;
               this.svgScaleHeight = this.svgHeight * this.scale;
             }
