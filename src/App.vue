@@ -895,8 +895,15 @@ export default {
     // 返回选中区域的组件
     getIntersectingmodel(startX, startY, endX, endY) {
       const intersectin = [];
-      // 1. 拿到所有的线条
-      const Model = this.svgDoc.querySelectorAll("use");
+      // 1. 拿到所有的组件，但是要排除掉圆点组件
+      const ModelCopy = this.svgDoc.querySelectorAll("use");
+      let Model=[]
+      // 2. 循环排除掉爷爷组件id为PT_Layer（圆点）的组件
+      for (const model of ModelCopy) {
+        if (model.parentNode.parentNode.getAttribute('id')!=='Status_Layer') {
+          Model.push(model)
+        }
+      }
       // 定义一个函数来检查点是否在矩形内
       function isPointInRect(x, y) {
         return x >= startX && x <= endX && y >= startY && y <= endY;
